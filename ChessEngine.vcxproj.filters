@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{040a19c5-8ee4-424a-b566-9c5d0aec7f73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models\Headers">
+      <UniqueIdentifier>{75e233f3-7fe5-4d88-affc-78855eedb85b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models\Implementations">
+      <UniqueIdentifier>{16b2dfe3-5690-47d2-9420-cc2e982aa6b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models\Interfaces">
+      <UniqueIdentifier>{432c1ce7-6c58-49a9-8095-e6d4aabed6a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Enums">
+      <UniqueIdentifier>{4018984c-1269-480a-94f0-663233075890}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models\Headers\ChessPieces">
+      <UniqueIdentifier>{9cd508b9-b407-482d-a458-c2d045eb8610}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Models\Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="ChessBoard.cpp">
+      <Filter>Models\Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="Pieces.cpp">
+      <Filter>Models\Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="Knight.cpp">
+      <Filter>Models\Headers\ChessPieces</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Pieces.h">
+      <Filter>Models\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Models\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ChessBoard.h">
+      <Filter>Models\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Enums.h">
+      <Filter>Enums</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
