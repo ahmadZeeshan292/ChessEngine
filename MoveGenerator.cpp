@@ -1,6 +1,7 @@
 #include "MoveGenerator.h"
 #include "ChessBoard.h"
 
+
 std::vector<sf::Vector2i> MoveGenerator::rookMoves(const sf::Vector2i& from)
 {
 	std::vector<sf::Vector2i> moves;
@@ -59,7 +60,7 @@ std::vector<sf::Vector2i> MoveGenerator::bishopMoves(const sf::Vector2i& from)
 			if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() == ChessBoard::Chessboard->board[from.x][from.y]->getColor())
 				break;
 
-			if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() == ChessBoard::Chessboard->board[from.x][from.y]->getColor()) {
+			if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor()) {
 				moves.push_back(pos);
 				break;
 			}
@@ -105,14 +106,17 @@ std::vector<sf::Vector2i> MoveGenerator::PawnMoves(const sf::Vector2i& from, boo
 	// missing en-passant and bounds for now
 	std::vector<sf::Vector2i> moves;
 
-	int direction = (ChessBoard::Chessboard->board[from.x][from.y]->getColor() == Turn::WHITE ? -1 : 1);
+	int direction = (ChessBoard::Chessboard->board[from.x][from.y]->getColor() == Turn::WHITE ? 1 : -1);
 
 	if (!hasMoved) {
-		moves.push_back(sf::Vector2i({ from.x, from.y + direction }));
-		moves.push_back(sf::Vector2i({ from.x, from.y + 2 * direction }));
+		if(!ChessBoard::Chessboard->board[from.x + direction][from.y])
+			moves.push_back(sf::Vector2i({ from.x + direction, from.y }));
+
+		if (!ChessBoard::Chessboard->board[from.x + 2 * direction][from.y] && !ChessBoard::Chessboard->board[from.x + direction][from.y])
+			moves.push_back(sf::Vector2i({ from.x + 2 * direction , from.y }));
 	}
-	else if (hasMoved && !ChessBoard::Chessboard->board[from.x][from.y+1]) {
-		moves.push_back(sf::Vector2i({ from.x, from.y + direction}));
+	else if (hasMoved && !ChessBoard::Chessboard->board[from.x + direction][from.y]) {
+		moves.push_back(sf::Vector2i({ from.x + direction, from.y}));
 	}
 
 	bool enemyPieceRightDiagonal = ChessBoard::InBounds(sf::Vector2i({from.x + direction, from.y + direction})) && ChessBoard::Chessboard->board[from.x + direction][from.y + direction] 
@@ -122,10 +126,10 @@ std::vector<sf::Vector2i> MoveGenerator::PawnMoves(const sf::Vector2i& from, boo
 		&& ChessBoard::Chessboard->board[from.x + direction][from.y - direction]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor();
 
 	if (enemyPieceRightDiagonal)
-		moves.push_back(sf::Vector2i({ from.x + 1, from.y + direction }));
+		moves.push_back(sf::Vector2i({ from.x + direction, from.y + direction }));
 
 	if (enemyPieceLeftDiagonal)
-		moves.push_back(sf::Vector2i({ from.x - 1, from.y - direction }));
+		moves.push_back(sf::Vector2i({ from.x + direction, from.y - direction }));
 
 	return moves;
 }

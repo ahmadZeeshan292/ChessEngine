@@ -8,4 +8,4 @@ std::vector<sf::Vector2i> Knight::legalMoves(const sf::Vector2i& from)
     return vector<sf::Vector2i>();
 }
 
-Knight::Knight(string path, Turn color_) : Piece(path, color_, ChessPiece::KNIGHT) {}
+Knight::Knight(std::string path, Turn color_) : Piece(path, color_, ChessPiece::KNIGHT) {}

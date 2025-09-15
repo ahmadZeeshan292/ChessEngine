@@ -4,6 +4,7 @@
 #include "ChessBoard.h"
 #include <iostream>
 #include <exception>
+#include "Pawn.h"
 
 Game::Game(){
     int H = ChessBoard::Chessboard->HEIGHT;
@@ -62,20 +63,20 @@ void Game::Update() {
             window.draw(tiles);
         }
 
-        Game::updatePieceCordinates(e, isDragging, selectedPiece, dragOrigin);
+        Game::PieceDragLogic(e, isDragging, selectedPiece, dragOrigin);
 
         if (isDragging && selectedPiece) {
+            const std::vector<sf::Vector2i>& legalMoves = selectedPiece->legalMoves(dragOrigin);
             sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
             sf::FloatRect bounds = selectedPiece->GetSprite().getLocalBounds();
             selectedPiece->GetSprite().setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-
             selectedPiece->GetSprite().setPosition(pos);
 
-            cout << dragOrigin.x << ',' << dragOrigin.y << endl;
+            updatePieceCordinates(e, isDragging, selectedPiece, dragOrigin, legalMoves);
 
             if (ChessBoard::InBounds(dragOrigin) && ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y])
-                Game::highLightMoves(selectedPiece, dragOrigin);
+                Game::highLightMoves(selectedPiece, dragOrigin, legalMoves);
         }
 
         Game::UpdatePieces();
@@ -102,8 +103,9 @@ void Game::InitializeBoard()
     }
 }
 
-void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i& dragOrigin)
+void Game::PieceDragLogic(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i& dragOrigin)
 {
+    // Mouse drag: select the piece
     if (event.type == sf::Event::MouseButtonPressed &&
         event.mouseButton.button == sf::Mouse::Left) {
 
@@ -118,7 +120,10 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
             isDragging = true;
         }
     }
+}
 
+void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i& dragOrigin, const std::vector<sf::Vector2i>& legalMoves)
+{
     // Mouse release: drop the piece
     if (event.type == sf::Event::MouseButtonReleased &&
         event.mouseButton.button == sf::Mouse::Left) {
@@ -136,11 +141,26 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
 
             // Update board
             if (dropIndex != dragOrigin) {
-                ChessBoard::Chessboard->board[dropIndex.x][dropIndex.y] = selectedPiece;
-                ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y] = nullptr;
+                if (find(legalMoves.begin(), legalMoves.end(), dropIndex) != legalMoves.end()) {
 
-                selectedPiece = nullptr;
-                isDragging = false;
+                    cout << "LEGAL MOVE BEING MADE!!!" << endl;
+                    ChessBoard::Chessboard->board[dropIndex.x][dropIndex.y] = selectedPiece;
+                    ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y] = nullptr;
+
+                    if (selectedPiece->pieceType == ChessPiece::PAWN) {
+                        if (auto pawn = dynamic_cast<Pawn*>(selectedPiece)) {
+                            pawn->setMoved(true);
+                        }
+                    }
+
+                    selectedPiece = nullptr;
+                    isDragging = false;
+                }
+                else {
+                    isDragging = false;
+                    selectedPiece->GetSprite().setOrigin(0, 0);
+                    selectedPiece->GetSprite().setPosition((dragOrigin.x + 1) * H, dragOrigin.y * W);
+                }
             }
             else {
                 isDragging = false;
@@ -166,11 +186,10 @@ void Game::UpdatePieces()
     }
 }
 
-void Game::highLightMoves(Piece* selectedPiece, sf::Vector2i& dragOrigin)
+void Game::highLightMoves(Piece* selectedPiece, sf::Vector2i& dragOrigin, const vector<sf::Vector2i>& legalMoves)
 {
     if (!selectedPiece) return;
     cout << dragOrigin.x << ',' << dragOrigin.y << endl;
-    const std::vector<sf::Vector2i>& legalMoves = selectedPiece->legalMoves(dragOrigin);
 
     int tileWidth = ChessBoard::Chessboard->WIDTH / 8;
     int tileHeight = ChessBoard::Chessboard->HEIGHT / 8;
@@ -186,5 +205,6 @@ void Game::highLightMoves(Piece* selectedPiece, sf::Vector2i& dragOrigin)
         window.draw(highlightTile);
     }
 }
+
 
 
