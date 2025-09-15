@@ -13,3 +13,4 @@ enum class ChessPiece : int {
 	KNIGHT,
 	ROOK
 };
+

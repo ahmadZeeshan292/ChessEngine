@@ -1,10 +1,11 @@
+#include "Knight.h"
+#include "ChessBoard.h"
 
-#include "Pieces.h"
-#include "Enums.h"
+std::vector<sf::Vector2i> Knight::legalMoves(const sf::Vector2i& from)
+{
+    if (ChessBoard::Chessboard->board[from.x][from.y]->pieceType == ChessPiece::KNIGHT)
+        return MoveGenerator::knightMoves(from);
+    return vector<sf::Vector2i>();
+}
 
-class Knight : Piece {
-public:
-    std::vector<sf::Vector2i> legalMoves(
-        const sf::Vector2i& from,
-        const std::vector<std::vector<Piece*>>& board) override
-};
+Knight::Knight(string path, Turn color_) : Piece(path, color_, ChessPiece::KNIGHT) {}

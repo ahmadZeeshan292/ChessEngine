@@ -31,6 +31,24 @@
     <Filter Include="Models\Headers\ChessPieces">
       <UniqueIdentifier>{9cd508b9-b407-482d-a458-c2d045eb8610}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Models\Headers\ChessPieces\Knight">
+      <UniqueIdentifier>{e58bc2cc-6bbe-44d8-8e8a-670b73615475}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models\Headers\ChessPieces\Bishop">
+      <UniqueIdentifier>{cbf12fba-72b4-44fc-b4fa-f72dd51c2614}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models\Headers\ChessPieces\Rook">
+      <UniqueIdentifier>{6dc4b1ea-f731-4242-ac3d-7a3767857c1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NameSpaces">
+      <UniqueIdentifier>{d6437119-0e26-43ca-b268-f6d87fbb6075}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models\Headers\ChessPieces\Queen">
+      <UniqueIdentifier>{415d45d0-3ca2-422a-a2de-2264bcc55d88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models\Headers\ChessPieces\Pawn">
+      <UniqueIdentifier>{1323a661-6ba2-4840-92f3-e45979af6a97}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -45,8 +63,26 @@
     <ClCompile Include="Pieces.cpp">
       <Filter>Models\Implementations</Filter>
     </ClCompile>
+    <ClCompile Include="Knight.h">
+      <Filter>Models\Headers\ChessPieces\Knight</Filter>
+    </ClCompile>
     <ClCompile Include="Knight.cpp">
-      <Filter>Models\Headers\ChessPieces</Filter>
+      <Filter>Models\Headers\ChessPieces\Knight</Filter>
+    </ClCompile>
+    <ClCompile Include="Bishop.cpp">
+      <Filter>Models\Headers\ChessPieces\Bishop</Filter>
+    </ClCompile>
+    <ClCompile Include="Rook.cpp">
+      <Filter>Models\Headers\ChessPieces\Rook</Filter>
+    </ClCompile>
+    <ClCompile Include="MoveGenerator.cpp">
+      <Filter>NameSpaces</Filter>
+    </ClCompile>
+    <ClCompile Include="Queen.cpp">
+      <Filter>Models\Headers\ChessPieces\Queen</Filter>
+    </ClCompile>
+    <ClCompile Include="Pawn.cpp">
+      <Filter>Models\Headers\ChessPieces\Pawn</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +97,21 @@
     </ClInclude>
     <ClInclude Include="Enums.h">
       <Filter>Enums</Filter>
+    </ClInclude>
+    <ClInclude Include="Bishop.h">
+      <Filter>Models\Headers\ChessPieces\Bishop</Filter>
+    </ClInclude>
+    <ClInclude Include="Rook.h">
+      <Filter>Models\Headers\ChessPieces\Rook</Filter>
+    </ClInclude>
+    <ClInclude Include="MoveGenerator.h">
+      <Filter>NameSpaces</Filter>
+    </ClInclude>
+    <ClInclude Include="Queen.h">
+      <Filter>Models\Headers\ChessPieces\Queen</Filter>
+    </ClInclude>
+    <ClInclude Include="Pawn.h">
+      <Filter>Models\Headers\ChessPieces\Pawn</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

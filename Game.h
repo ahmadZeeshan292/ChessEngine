@@ -20,6 +20,7 @@ public:
 	void Initialize();
 	void Update();
 	void InitializeBoard();
-	void updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i dragOrigin);
+	void updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i& dragOrigin);
 	void UpdatePieces();
+	void highLightMoves(Piece* selectedPiece, sf::Vector2i& dragOrigin);
 };

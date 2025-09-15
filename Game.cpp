@@ -66,7 +66,16 @@ void Game::Update() {
 
         if (isDragging && selectedPiece) {
             sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+            sf::FloatRect bounds = selectedPiece->GetSprite().getLocalBounds();
+            selectedPiece->GetSprite().setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+
             selectedPiece->GetSprite().setPosition(pos);
+
+            cout << dragOrigin.x << ',' << dragOrigin.y << endl;
+
+            if (ChessBoard::InBounds(dragOrigin) && ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y])
+                Game::highLightMoves(selectedPiece, dragOrigin);
         }
 
         Game::UpdatePieces();
@@ -93,7 +102,7 @@ void Game::InitializeBoard()
     }
 }
 
-void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i dragOrigin)
+void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i& dragOrigin)
 {
     if (event.type == sf::Event::MouseButtonPressed &&
         event.mouseButton.button == sf::Mouse::Left) {
@@ -123,13 +132,20 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
 
             // Snap to grid
             selectedPiece->GetSprite().setPosition((dropIndex.x + 1) * H, dropIndex.y * W);
+            selectedPiece->GetSprite().setOrigin(0, 0);
 
             // Update board
-            ChessBoard::Chessboard->board[dropIndex.x][dropIndex.y] = selectedPiece;
-            ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y] = nullptr;
+            if (dropIndex != dragOrigin) {
+                ChessBoard::Chessboard->board[dropIndex.x][dropIndex.y] = selectedPiece;
+                ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y] = nullptr;
 
-            selectedPiece = nullptr;
-            isDragging = false;
+                selectedPiece = nullptr;
+                isDragging = false;
+            }
+            else {
+                isDragging = false;
+                selectedPiece->GetSprite().setOrigin(0, 0);
+            }
         }
     }
 }
@@ -149,4 +165,26 @@ void Game::UpdatePieces()
         }
     }
 }
+
+void Game::highLightMoves(Piece* selectedPiece, sf::Vector2i& dragOrigin)
+{
+    if (!selectedPiece) return;
+    cout << dragOrigin.x << ',' << dragOrigin.y << endl;
+    const std::vector<sf::Vector2i>& legalMoves = selectedPiece->legalMoves(dragOrigin);
+
+    int tileWidth = ChessBoard::Chessboard->WIDTH / 8;
+    int tileHeight = ChessBoard::Chessboard->HEIGHT / 8;
+
+    if (legalMoves.empty())
+        return;
+
+    std::cout << "FOUND MOVES!!!" << std::endl;
+    sf::Sprite highlightTile = ChessBoard::Chessboard->highlightTile;
+
+    for (const auto& move : legalMoves) {
+        highlightTile.setPosition(move.x * tileWidth, move.y * tileHeight);
+        window.draw(highlightTile);
+    }
+}
+
 

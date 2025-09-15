@@ -18,13 +18,17 @@ public:
 
 	sf::Sprite WhiteTile;
 	sf::Sprite BlackTile;
+	sf::Sprite highlightTile;
 
 	sf::Texture blackTileTexture;
 	sf::Texture whiteTileTexture;
+	sf::Texture highlightTileTexture;
 
 	ChessBoard();
 
 	void InitializeBoard();
+
+	static bool InBounds(sf::Vector2i coordinates);
 
 	bool Player();
 };
