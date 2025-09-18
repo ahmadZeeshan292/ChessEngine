@@ -1,6 +1,5 @@
 
 #include "Pieces.h"
-#include "Enums.h"
 
 class Knight : public Piece {
 public:

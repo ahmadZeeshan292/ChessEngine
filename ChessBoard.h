@@ -3,16 +3,20 @@
 #include<SFML/Graphics.hpp>
 #include<vector>
 #include "Pieces.h"
-#include "Enums.h"
+#include "Bishop.h"
+#include "Rook.h"
+#include "Queen.h"
+#include "Pawn.h"
+#include "King.h"
+#include "Knight.h"
 
 class ChessBoard {
-private:
-	Turn player;
 public:
 	int HEIGHT;
 	int WIDTH;
 
 	vector<vector<Piece*>> board;
+	Turn player;
 
 	static ChessBoard* Chessboard;
 
@@ -24,11 +28,18 @@ public:
 	sf::Texture whiteTileTexture;
 	sf::Texture highlightTileTexture;
 
+	std::pair<King*, sf::Vector2i> WhiteKing;
+	std::pair<King*, sf::Vector2i> BlackKing;
+
 	ChessBoard();
 
 	void InitializeBoard();
 
 	static bool InBounds(sf::Vector2i coordinates);
 
-	bool Player();
+	Turn Player();
+
+	vector<sf::Vector2i> GenerateAllLegalMoves(Turn& color_);
+
+	bool KinginPath(sf::Vector2i sourcePiece, sf::Vector2i destinationPiece, sf::Vector2i placement);
 };

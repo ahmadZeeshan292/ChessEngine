@@ -49,6 +49,9 @@
     <Filter Include="Models\Headers\ChessPieces\Pawn">
       <UniqueIdentifier>{1323a661-6ba2-4840-92f3-e45979af6a97}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Models\Headers\ChessPieces\King">
+      <UniqueIdentifier>{ccecbb7d-8689-4865-86f4-78f22733cb07}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -84,6 +87,9 @@
     <ClCompile Include="Pawn.cpp">
       <Filter>Models\Headers\ChessPieces\Pawn</Filter>
     </ClCompile>
+    <ClCompile Include="King.cpp">
+      <Filter>Models\Headers\ChessPieces\King</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pieces.h">
@@ -112,6 +118,9 @@
     </ClInclude>
     <ClInclude Include="Pawn.h">
       <Filter>Models\Headers\ChessPieces\Pawn</Filter>
+    </ClInclude>
+    <ClInclude Include="King.h">
+      <Filter>Models\Headers\ChessPieces\King</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

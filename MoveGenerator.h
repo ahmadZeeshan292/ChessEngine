@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "Enums.h"
 #include<SFML/Graphics.hpp>
 
 namespace MoveGenerator {
@@ -9,5 +10,9 @@ namespace MoveGenerator {
     std::vector<sf::Vector2i> knightMoves(const sf::Vector2i& from);
     std::vector<sf::Vector2i> QueenMoves(const sf::Vector2i& from);
     std::vector<sf::Vector2i> PawnMoves(const sf::Vector2i& from, bool hasMoved);
+    std::vector<sf::Vector2i> PawnAttackMoves(const sf::Vector2i& from);
     std::vector<sf::Vector2i> KingMoves(const sf::Vector2i& from);
+    std::vector<sf::Vector2i> KingPossibleMoves(const sf::Vector2i& from);
+
+    void pinPieceLogic(sf::Vector2i from, sf::Vector2i pos, sf::Vector2i placement, bool type);
 }

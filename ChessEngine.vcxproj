@@ -134,6 +134,7 @@
     <ClCompile Include="Bishop.cpp" />
     <ClCompile Include="ChessBoard.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="King.cpp" />
     <ClCompile Include="Knight.cpp" />
     <ClCompile Include="Knight.h" />
     <ClCompile Include="MoveGenerator.cpp" />
@@ -148,6 +149,7 @@
     <ClInclude Include="ChessBoard.h" />
     <ClInclude Include="Enums.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="King.h" />
     <ClInclude Include="MoveGenerator.h" />
     <ClInclude Include="Pawn.h" />
     <ClInclude Include="Pieces.h" />

@@ -1,4 +1,3 @@
-#include "Knight.h"
 #include "ChessBoard.h"
 
 std::vector<sf::Vector2i> Knight::legalMoves(const sf::Vector2i& from)

@@ -66,17 +66,14 @@ void Game::Update() {
         Game::PieceDragLogic(e, isDragging, selectedPiece, dragOrigin);
 
         if (isDragging && selectedPiece) {
-            const std::vector<sf::Vector2i>& legalMoves = selectedPiece->legalMoves(dragOrigin);
-            sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+            if (selectedPiece->color == ChessBoard::Chessboard->player) {
+                const std::vector<sf::Vector2i>& legalMoves = selectedPiece->legalMoves(dragOrigin);
 
-            sf::FloatRect bounds = selectedPiece->GetSprite().getLocalBounds();
-            selectedPiece->GetSprite().setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-            selectedPiece->GetSprite().setPosition(pos);
+                updatePieceCordinates(e, isDragging, selectedPiece, dragOrigin, legalMoves);
 
-            updatePieceCordinates(e, isDragging, selectedPiece, dragOrigin, legalMoves);
-
-            if (ChessBoard::InBounds(dragOrigin) && ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y])
-                Game::highLightMoves(selectedPiece, dragOrigin, legalMoves);
+                if (ChessBoard::InBounds(dragOrigin) && ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y])
+                    Game::highLightMoves(selectedPiece, dragOrigin, legalMoves);
+            }
         }
 
         Game::UpdatePieces();
@@ -124,6 +121,12 @@ void Game::PieceDragLogic(sf::Event& event, bool& isDragging, Piece*& selectedPi
 
 void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i& dragOrigin, const std::vector<sf::Vector2i>& legalMoves)
 {
+    sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+    sf::FloatRect bounds = selectedPiece->GetSprite().getLocalBounds();
+    selectedPiece->GetSprite().setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+    selectedPiece->GetSprite().setPosition(pos);
+
     // Mouse release: drop the piece
     if (event.type == sf::Event::MouseButtonReleased &&
         event.mouseButton.button == sf::Mouse::Left) {
@@ -152,6 +155,10 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
                             pawn->setMoved(true);
                         }
                     }
+
+                    // selectedPiece->PinningPiece = pair<sf::Vector2i, sf::Vector2i>();
+
+                    ChessBoard::Chessboard->player = ChessBoard::Chessboard->player == Turn::BLACK ? Turn::WHITE : Turn::BLACK;
 
                     selectedPiece = nullptr;
                     isDragging = false;
