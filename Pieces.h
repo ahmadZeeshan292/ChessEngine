@@ -18,7 +18,6 @@ public:
 
 	// pinning piece position and placement
 	std::pair<sf::Vector2i, sf::Vector2i> PinningPiece;   
-	bool CanMove;      // tell if piece can move
 
 	Piece(string path, Turn color_, ChessPiece Type);
 

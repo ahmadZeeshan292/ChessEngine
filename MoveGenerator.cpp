@@ -5,27 +5,73 @@
 
 std::vector<sf::Vector2i> MoveGenerator::rookMoves(const sf::Vector2i& from)
 {
-	std::vector<sf::Vector2i> moves;
 
-	static const vector<sf::Vector2i> offset = {
+	const vector<sf::Vector2i> offset = {
 		{ 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }
 	};
 
-	// if piece absolute pinned return empty set
-	if (!ChessBoard::Chessboard->board[from.x][from.y]->CanMove) {
-		return std::vector<sf::Vector2i>();
+	
+	return longRangeAttackerMoves(offset, from, ChessPiece::ROOK);
+}
+
+void MoveGenerator::pinPieceLogic(sf::Vector2i from, sf::Vector2i pos, sf::Vector2i placements, ChessPiece type)
+{
+	/*
+	from = piece rather then king
+	to   = king position
+	
+	*/
+	sf::Vector2i npos = pos + placements;
+
+	/*
+
+	Loop checks first if king lies in the current path
+	if it does check the path if its obstructed by any piece
+	if piece found other than king break loop
+	else if king found without obstruction
+	give the other piece pinnning piece position and pinning placement
+
+	*/
+	if (ChessBoard::Chessboard->KinginPath(from, pos, placements)) {
+		while (ChessBoard::InBounds(npos)) {
+			if (ChessBoard::Chessboard->board[npos.x][npos.y]) {
+				if (ChessBoard::Chessboard->board[npos.x][npos.y]->pieceType == ChessPiece::KING && ChessBoard::Chessboard->board[from.x][from.y]->getColor() != ChessBoard::Chessboard->board[npos.x][npos.y]->getColor()) {
+					if (ChessBoard::Chessboard->board[from.x][from.y]->pieceType == type || ChessBoard::Chessboard->board[from.x][from.y]->pieceType == ChessPiece::QUEEN) {
+						std::cout << "PIECE PINNED!!!!" << pos.x << ", " << pos.y << " | " << placements.x << ", " << placements.y << endl;
+						ChessBoard::Chessboard->board[pos.x][pos.y]->PinningPiece = std::pair<sf::Vector2i, sf::Vector2i>(sf::Vector2i({ from }), sf::Vector2i({ -placements }));
+						// above line can cause an error has the piece pinned remove logic is not implemented yet
+					}
+				}
+				else {
+					break;
+				}
+			}
+			npos = npos + placements;
+		}
 	}
+}
+
+std::vector<sf::Vector2i> MoveGenerator::longRangeAttackerMoves(const std::vector<sf::Vector2i> offset,const sf::Vector2i& from, ChessPiece type)
+{
+	std::vector<sf::Vector2i> moves;
 
 	// if piece relative pinned return all cells from - to 
 	if (ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece != std::pair<sf::Vector2i, sf::Vector2i>()) {
-		sf::Vector2i pos;
-		sf::Vector2i to = ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece.first;
+		sf::Vector2i pinningPiece = ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece.first;
 		sf::Vector2i placement = ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece.second;
 
-		pinPieceLogic(from, pos, placement, false);
+		if (find(offset.begin(), offset.end(), placement) == offset.end()) return vector<sf::Vector2i>();
+
+		sf::Vector2i pos;
+
+		// check if this can see an other piece which can be potencially pinned
+		sf::Vector2i kingPos = ChessBoard::Chessboard->board[from.x][from.y]->getColor() == Turn::WHITE ? ChessBoard::Chessboard->BlackKing.second : ChessBoard::Chessboard->WhiteKing.second;
+		ChessPiece type = ChessBoard::Chessboard->board[from.x][from.y]->pieceType;
+
+		pinPieceLogic(from, pinningPiece, placement, type);
 
 		pos = from + placement;
-		while (pos != to + placement) {
+		while (pos != pinningPiece + placement) {
 			moves.push_back(pos);
 			pos += placement;
 		}
@@ -50,82 +96,24 @@ std::vector<sf::Vector2i> MoveGenerator::rookMoves(const sf::Vector2i& from)
 
 			if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor()) {
 				moves.push_back(pos);
-
-				pinPieceLogic(from, pos, placements, true);
-
+				pinPieceLogic(from, pos, placements, type);
 				break;
 			}
 		}
 	}
+
 	return moves;
-}
-
-void MoveGenerator::pinPieceLogic(sf::Vector2i from, sf::Vector2i pos, sf::Vector2i placements, bool type)
-{
-	sf::Vector2i npos = pos + placements;
-
-	sf::Vector2i enemyKing = ChessBoard::Chessboard->board[from.x][from.y]->getColor() == Turn::BLACK ? ChessBoard::Chessboard->BlackKing.second : ChessBoard::Chessboard->WhiteKing.second;
-
-	/*
-
-	Loop checks first if king lies in the current path
-	if it does check the path if its obstructed by any piece
-	if piece found other than king break loop
-	else if king found without obstruction
-	give the other piece pinnning piece position and pinning placement
-
-	*/
-	if (ChessBoard::Chessboard->KinginPath(from, pos, placements)) {
-		while (ChessBoard::InBounds(npos)) {
-			if (ChessBoard::Chessboard->board[npos.x][npos.y]) {
-				if (ChessBoard::Chessboard->board[npos.x][npos.y]->pieceType == ChessPiece::KING && ChessBoard::Chessboard->board[from.x][from.y]->getColor() != ChessBoard::Chessboard->board[npos.x][npos.y]->getColor()) {
-					if (ChessBoard::Chessboard->board[from.x][from.y]->pieceType == ChessPiece::ROOK || ChessBoard::Chessboard->board[from.x][from.y]->pieceType == ChessPiece::QUEEN) {
-						std::cout << "PIECE PINNED!!!!" << pos.x << ", " << pos.y << " | " << placements.x << ", " << placements.y << endl;
-						ChessBoard::Chessboard->board[pos.x][pos.y]->PinningPiece = std::pair<sf::Vector2i, sf::Vector2i>(sf::Vector2i({ from }), sf::Vector2i({ -placements }));
-					}
-				}
-				else {
-					break;
-				}
-			}
-			npos = npos + placements;
-		}
-	}
 }
 
 std::vector<sf::Vector2i> MoveGenerator::bishopMoves(const sf::Vector2i& from)
 {
 	std::vector<sf::Vector2i> moves;
 
-	static const std::vector<sf::Vector2i> directions = {
+	static const std::vector<sf::Vector2i> offsets = {
 		 {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
 	};
 
-	for (auto dir : directions) {
-		sf::Vector2i pos = from;
-
-		while (true) {
-			pos += dir;
-
-			if (!ChessBoard::InBounds(pos))
-				break;
-
-			if (!ChessBoard::Chessboard->board[pos.x][pos.y]) {
-				moves.push_back(pos);
-				continue;
-			}
-
-			if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() == ChessBoard::Chessboard->board[from.x][from.y]->getColor())
-				break;
-
-			if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor()) {
-				moves.push_back(pos);
-				break;
-			}
-		}
-	}
-
-	return moves;
+	return longRangeAttackerMoves(offsets, from, ChessPiece::BISHOP);
 }
 
 std::vector<sf::Vector2i> MoveGenerator::knightMoves(const sf::Vector2i& from)

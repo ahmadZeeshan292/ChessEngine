@@ -12,7 +12,6 @@ Piece::Piece(string path, Turn color_, ChessPiece type_){
 
 	color = color_;
 	pieceType = type_;
-	CanMove = true;
 }
 
 Piece::Piece(const Piece& piece): pieceSprite(piece.pieceSprite),pieceTexture(piece.pieceTexture), Coordinates(piece.Coordinates)

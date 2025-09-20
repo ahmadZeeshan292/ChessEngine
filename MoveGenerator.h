@@ -14,5 +14,7 @@ namespace MoveGenerator {
     std::vector<sf::Vector2i> KingMoves(const sf::Vector2i& from);
     std::vector<sf::Vector2i> KingPossibleMoves(const sf::Vector2i& from);
 
-    void pinPieceLogic(sf::Vector2i from, sf::Vector2i pos, sf::Vector2i placement, bool type);
+    void pinPieceLogic(sf::Vector2i from, sf::Vector2i pos, sf::Vector2i placement, ChessPiece type);
+
+    std::vector<sf::Vector2i> longRangeAttackerMoves(const std::vector<sf::Vector2i> offsets, const sf::Vector2i& from, ChessPiece type);
 }

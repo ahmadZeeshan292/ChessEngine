@@ -156,12 +156,11 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
                         }
                     }
 
-                    // selectedPiece->PinningPiece = pair<sf::Vector2i, sf::Vector2i>();
-
                     ChessBoard::Chessboard->player = ChessBoard::Chessboard->player == Turn::BLACK ? Turn::WHITE : Turn::BLACK;
 
                     selectedPiece = nullptr;
                     isDragging = false;
+
                 }
                 else {
                     isDragging = false;
