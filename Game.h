@@ -13,6 +13,7 @@ private:
 	sf::View view;
 
 	vector<sf::Sprite> tileLayout;
+	bool updateState;
 
 public:
 	Game();

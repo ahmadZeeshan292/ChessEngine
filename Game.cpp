@@ -17,6 +17,8 @@ Game::Game(){
     view.setRotation(90);
 
     window.setView(view);
+
+    updateState = false;
 }
 
 void Game::Initialize()
@@ -39,8 +41,6 @@ void Game::Initialize()
         flag = !flag;
     }
 }
-
-
 
 void Game::Update() {
 
@@ -121,6 +121,13 @@ void Game::PieceDragLogic(sf::Event& event, bool& isDragging, Piece*& selectedPi
 
 void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i& dragOrigin, const std::vector<sf::Vector2i>& legalMoves)
 {
+    // update game state if piece is being dragged do this only for the first dragging frame
+    if (!updateState) {
+        MoveGenerator::KingMoves(ChessBoard::Chessboard->WhiteKing.second);
+        MoveGenerator::KingMoves(ChessBoard::Chessboard->BlackKing.second);
+        updateState = true;
+    }
+
     sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
     sf::FloatRect bounds = selectedPiece->GetSprite().getLocalBounds();
@@ -160,6 +167,7 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
 
                     selectedPiece = nullptr;
                     isDragging = false;
+                    updateState = false;
 
                 }
                 else {
