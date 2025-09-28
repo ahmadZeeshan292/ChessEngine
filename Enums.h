@@ -14,4 +14,9 @@ enum class ChessPiece : int {
 	ROOK
 };
 
+enum class GameState : bool {
+	GAME,
+	PLAYER
+};
+
 

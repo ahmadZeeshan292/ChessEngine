@@ -67,7 +67,7 @@ void Game::Update() {
 
         if (isDragging && selectedPiece) {
             if (selectedPiece->color == ChessBoard::Chessboard->player) {
-                const std::vector<sf::Vector2i>& legalMoves = selectedPiece->legalMoves(dragOrigin);
+                const std::vector<sf::Vector2i>& legalMoves = selectedPiece->legalMoves(dragOrigin, GameState::PLAYER);
 
                 updatePieceCordinates(e, isDragging, selectedPiece, dragOrigin, legalMoves);
 
@@ -161,6 +161,16 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
                         if (auto pawn = dynamic_cast<Pawn*>(selectedPiece)) {
                             pawn->setMoved(true);
                         }
+                    }
+
+                    // Update White/Black king for there chessBoard references 
+                    if (selectedPiece->pieceType == ChessPiece::KING) 
+                        selectedPiece->color == Turn::WHITE ? ChessBoard::Chessboard->WhiteKing.second = dropIndex: ChessBoard::Chessboard->BlackKing.second = dropIndex;
+
+                    if (selectedPiece->pinnedPiece != sf::Vector2i()) {
+                        sf::Vector2i idx = selectedPiece->pinnedPiece;
+                        ChessBoard::Chessboard->board[idx.x][idx.y]->PinningPiece = pair<sf::Vector2i, sf::Vector2i>();
+                        selectedPiece->pinnedPiece = sf::Vector2i();
                     }
 
                     ChessBoard::Chessboard->player = ChessBoard::Chessboard->player == Turn::BLACK ? Turn::WHITE : Turn::BLACK;

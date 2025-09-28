@@ -17,7 +17,8 @@ public:
 	ChessPiece pieceType;
 
 	// pinning piece position and placement
-	std::pair<sf::Vector2i, sf::Vector2i> PinningPiece;   
+	std::pair<sf::Vector2i, sf::Vector2i> PinningPiece;  
+	sf::Vector2i pinnedPiece; // showcases the pinned piece wrt the piece pinning it
 
 	Piece(string path, Turn color_, ChessPiece Type);
 
@@ -27,5 +28,5 @@ public:
 
 	const Turn getColor() const { return color; }
 
-	virtual vector<sf::Vector2i> legalMoves(const sf::Vector2i& from) = 0;
+	virtual vector<sf::Vector2i> legalMoves(const sf::Vector2i& from, GameState state) = 0;
 };

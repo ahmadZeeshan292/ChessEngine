@@ -78,7 +78,7 @@ Turn ChessBoard::Player()
     return player;
 }
 
-vector<sf::Vector2i> ChessBoard::GenerateAllLegalMoves(Turn &color_)
+vector<sf::Vector2i> ChessBoard::GenerateAllLegalMoves(Turn color_)
 {
     vector<sf::Vector2i> ans;
 
@@ -95,7 +95,7 @@ vector<sf::Vector2i> ChessBoard::GenerateAllLegalMoves(Turn &color_)
                      pieceMoves = MoveGenerator::PawnAttackMoves(sf::Vector2i({ i, j }));
                 }
                 else {
-                     pieceMoves = board[i][j]->legalMoves(sf::Vector2i({ i, j }));
+                     pieceMoves = board[i][j]->legalMoves(sf::Vector2i({ i, j }), GameState::GAME);
                 }
                 for (auto& move : pieceMoves) {
                     if (find(ans.begin(), ans.end(), move) == ans.end()) {

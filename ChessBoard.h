@@ -39,7 +39,7 @@ public:
 
 	Turn Player();
 
-	vector<sf::Vector2i> GenerateAllLegalMoves(Turn& color_);
+	vector<sf::Vector2i> GenerateAllLegalMoves(Turn color_);
 
 	bool KinginPath(sf::Vector2i sourcePiece, sf::Vector2i destinationPiece, sf::Vector2i placement);
 };
