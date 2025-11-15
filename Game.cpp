@@ -4,7 +4,7 @@
 #include "ChessBoard.h"
 #include <iostream>
 #include <exception>
-#include "Pawn.h"
+// #include "Pawn.h"
 
 Game::Game(){
     int H = ChessBoard::Chessboard->HEIGHT;
@@ -165,8 +165,10 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
 
                     // Update White/Black king for there chessBoard references 
                     if (selectedPiece->pieceType == ChessPiece::KING) 
-                        selectedPiece->color == Turn::WHITE ? ChessBoard::Chessboard->WhiteKing.second = dropIndex: ChessBoard::Chessboard->BlackKing.second = dropIndex;
+                        selectedPiece->color == Turn::WHITE ? ChessBoard::Chessboard->WhiteKing.second = dropIndex : ChessBoard::Chessboard->BlackKing.second = dropIndex;
 
+                    selectedPiece->color == Turn::WHITE ? ChessBoard::Chessboard->WhiteKing.first->inCheck = false : ChessBoard::Chessboard->BlackKing.first->inCheck = false;
+                    
                     if (selectedPiece->pinnedPiece != sf::Vector2i()) {
                         sf::Vector2i idx = selectedPiece->pinnedPiece;
                         ChessBoard::Chessboard->board[idx.x][idx.y]->PinningPiece = pair<sf::Vector2i, sf::Vector2i>();

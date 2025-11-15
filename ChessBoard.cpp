@@ -33,6 +33,7 @@ ChessBoard::ChessBoard() : HEIGHT(800), WIDTH(800), board(8, vector<Piece*>(8, n
 
 void ChessBoard::InitializeBoard()
 {
+    
     //board[0][0] = new Rook("Images/w_rook.png", Turn::WHITE);
     //board[0][1] = new Knight("Images/w_knight.png", Turn::WHITE);
     //board[0][2] = new Bishop("Images/w_bishop.png", Turn::WHITE);
@@ -40,7 +41,9 @@ void ChessBoard::InitializeBoard()
     board[0][7] = new King("Images/w_king.png", Turn::WHITE);
     //board[0][5] = new Bishop("Images/w_bishop.png", Turn::WHITE);
     //board[0][6] = new Knight("Images/w_knight.png", Turn::WHITE);
-    board[1][6] = new Pawn("Images/w_pawn.png", Turn::WHITE);
+    //board[1][6] = new Pawn("Images/w_pawn.png", Turn::WHITE);
+
+    board[1][2] = new Bishop("Images/w_bishop.png", Turn::WHITE);
 
     board[1][0] = new Pawn("Images/w_pawn.png", Turn::WHITE);
 
@@ -48,7 +51,7 @@ void ChessBoard::InitializeBoard()
         //board[1][i] = new Pawn("Images/w_pawn.png", Turn::WHITE);
     }
 
-    board[2][5] = new Bishop("Images/b_bishop.png", Turn::BLACK);
+    board[7][0] = new Bishop("Images/b_bishop.png", Turn::BLACK);
     //board[7][1] = new Knight("Images/b_knight.png", Turn::BLACK);
     //board[7][2] = new Bishop("Images/b_bishop.png", Turn::BLACK);
     //board[7][3] = new Queen("Images/b_Queen.png", Turn::BLACK);
@@ -57,15 +60,16 @@ void ChessBoard::InitializeBoard()
     //board[7][6] = new Knight("Images/b_knight.png", Turn::BLACK);
     board[6][4] = new Pawn("Images/b_pawn.png", Turn::BLACK);
 
+    //board[7][7] = new Rook("Images/b_rook.png", Turn::BLACK);
+    
     board[6][0] = new Pawn("Images/b_pawn.png", Turn::BLACK);
     for (int i = 0;i < 8; i++) {
         //board[6][i] = new Pawn("Images/b_pawn.png", Turn::BLACK);
     }
-
+    
     WhiteKing = std::pair<King*, sf::Vector2i>(dynamic_cast<King*>(board[0][7]), sf::Vector2i({0, 7}));
     BlackKing = std::pair<King*, sf::Vector2i>(dynamic_cast<King*>(board[7][4]), sf::Vector2i({7, 4}));
-
-
+    
 }
 
 bool ChessBoard::InBounds(sf::Vector2i coordinates)

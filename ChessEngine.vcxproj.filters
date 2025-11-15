@@ -52,6 +52,9 @@
     <Filter Include="Models\Headers\ChessPieces\King">
       <UniqueIdentifier>{ccecbb7d-8689-4865-86f4-78f22733cb07}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utility_Structs">
+      <UniqueIdentifier>{d9749fe2-c718-4af8-8dfc-10cae7bdcc35}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -121,6 +124,9 @@
     </ClInclude>
     <ClInclude Include="King.h">
       <Filter>Models\Headers\ChessPieces\King</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility_Class.h">
+      <Filter>Utility_Structs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

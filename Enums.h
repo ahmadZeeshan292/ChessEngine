@@ -19,4 +19,9 @@ enum class GameState : bool {
 	PLAYER
 };
 
+enum class Attacker : int {
+	LONG_RANGE,
+	SHORT_RANGE
+};
+
 

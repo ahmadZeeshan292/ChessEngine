@@ -1,6 +1,6 @@
 #pragma once
 
-#include<SFML/Graphics.hpp>
+#include "Utility_Class.h"
 #include<vector>
 #include "Pieces.h"
 #include "Bishop.h"

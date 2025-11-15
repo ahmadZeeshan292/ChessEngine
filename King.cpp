@@ -11,13 +11,17 @@ std::vector<sf::Vector2i> King::legalMoves(const sf::Vector2i& from, GameState s
 King::King(string path, Turn _color) : Piece(path, _color, ChessPiece::KING) 
 {
 	inCheck = false;
-	CheckingPieces = vector<pair<sf::Vector2i, sf::Vector2i>>();
+	CheckingPieces = pair<sf::Vector2i, sf::Vector2i>();
 }
 
-void King::beingCheck(vector<pair<sf::Vector2i, sf::Vector2i>> selected)
+void King::beingCheck(pair<sf::Vector2i, sf::Vector2i> selected)
 {
-	for (auto& pieces : selected) {
-		CheckingPieces.push_back(pieces);
-	}
+	CheckingPieces = selected;
+}
+
+void King::checkKing(sf::Vector2i start, sf::Vector2i dir)
+{
+	CheckingPieces = pair<sf::Vector2i, sf::Vector2i>{start, dir};
+	ChessBoard::Chessboard->BlackKing.first->inCheck = true;
 }
 
