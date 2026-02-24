@@ -6,8 +6,10 @@ class King : public Piece {
 public:
 	pair<sf::Vector2i, sf::Vector2i> CheckingPieces;
 
+	bool hasMoved;
 	bool inCheck;
 	bool doubleCheck;
+	bool checkmate;
 
 	std::vector<sf::Vector2i> legalMoves(const sf::Vector2i& from, GameState state);
 

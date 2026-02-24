@@ -12,9 +12,10 @@ Piece::Piece(string path, Turn color_, ChessPiece type_){
 
 	color = color_;
 	pieceType = type_;
+	pinnedPiece = sf::Vector2i();
 }
 
-Piece::Piece(const Piece& piece): pieceSprite(piece.pieceSprite),pieceTexture(piece.pieceTexture), Coordinates(piece.Coordinates)
+Piece::Piece(const Piece& piece) : pieceSprite(piece.pieceSprite), pieceTexture(piece.pieceTexture), Coordinates(piece.Coordinates), color(piece.color), pieceType(piece.pieceType), PinningPiece(piece.PinningPiece)
 {
 	pieceSprite.setTexture(pieceTexture);
 }

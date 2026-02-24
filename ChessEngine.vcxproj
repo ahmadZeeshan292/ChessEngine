@@ -131,7 +131,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BB_MagicAlgorithm.cpp" />
+    <ClCompile Include="BB_MoveGenerator.cpp" />
     <ClCompile Include="Bishop.cpp" />
+    <ClCompile Include="BitBoard.cpp" />
+    <ClCompile Include="BitBoard_ChessBoard_visuals.cpp" />
+    <ClCompile Include="BitBoard_Game.cpp" />
     <ClCompile Include="ChessBoard.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="King.cpp" />
@@ -143,18 +148,27 @@
     <ClCompile Include="Queen.cpp" />
     <ClCompile Include="Rook.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="Sprite_BitBoard_Mapping.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BB_MagicAlgorithm.h" />
+    <ClInclude Include="BB_MoveGenerator.h" />
     <ClInclude Include="Bishop.h" />
+    <ClInclude Include="BitBoard.h" />
+    <ClInclude Include="BitBoard_ChessBoard_visuals.h" />
+    <ClInclude Include="BitBoard_Game.h" />
     <ClInclude Include="ChessBoard.h" />
     <ClInclude Include="Enums.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="King.h" />
     <ClInclude Include="MoveGenerator.h" />
     <ClInclude Include="Pawn.h" />
+    <ClInclude Include="PieceMagicStorage.h" />
     <ClInclude Include="Pieces.h" />
     <ClInclude Include="Queen.h" />
     <ClInclude Include="Rook.h" />
+    <ClInclude Include="Sprite_BitBoard_Mapping.h" />
+    <ClInclude Include="Utility_BB.h" />
     <ClInclude Include="Utility_Class.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

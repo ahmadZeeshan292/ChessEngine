@@ -1,4 +1,4 @@
-
+﻿
 #include "ChessBoard.h"
 
 ChessBoard::ChessBoard() : HEIGHT(800), WIDTH(800), board(8, vector<Piece*>(8, nullptr)) {
@@ -27,23 +27,23 @@ ChessBoard::ChessBoard() : HEIGHT(800), WIDTH(800), board(8, vector<Piece*>(8, n
         float(HEIGHT / 8) / whiteTileTexture.getSize().y
     );
 
-    InitializeBoard();
+    loadDefaultPosition();
     player = Turn::WHITE;
 }
 
 void ChessBoard::InitializeBoard()
 {
     
-    //board[0][0] = new Rook("Images/w_rook.png", Turn::WHITE);
+    board[0][5] = new Rook("Images/w_rook.png", Turn::WHITE);
     //board[0][1] = new Knight("Images/w_knight.png", Turn::WHITE);
     //board[0][2] = new Bishop("Images/w_bishop.png", Turn::WHITE);
-    //board[0][3] = new Queen("Images/w_queen.png", Turn::WHITE);
+    board[0][2] = new Queen("Images/w_queen.png", Turn::WHITE);
     board[0][7] = new King("Images/w_king.png", Turn::WHITE);
-    //board[0][5] = new Bishop("Images/w_bishop.png", Turn::WHITE);
+    board[0][0] = new Bishop("Images/w_bishop.png", Turn::WHITE);
     //board[0][6] = new Knight("Images/w_knight.png", Turn::WHITE);
     //board[1][6] = new Pawn("Images/w_pawn.png", Turn::WHITE);
 
-    board[1][2] = new Bishop("Images/w_bishop.png", Turn::WHITE);
+    //board[1][2] = new Bishop("Images/w_bishop.png", Turn::WHITE);
 
     board[1][0] = new Pawn("Images/w_pawn.png", Turn::WHITE);
 
@@ -51,8 +51,8 @@ void ChessBoard::InitializeBoard()
         //board[1][i] = new Pawn("Images/w_pawn.png", Turn::WHITE);
     }
 
-    board[7][0] = new Bishop("Images/b_bishop.png", Turn::BLACK);
-    //board[7][1] = new Knight("Images/b_knight.png", Turn::BLACK);
+    //board[7][0] = new Bishop("Images/b_bishop.png", Turn::BLACK);
+    board[1][4] = new Knight("Images/b_knight.png", Turn::BLACK);
     //board[7][2] = new Bishop("Images/b_bishop.png", Turn::BLACK);
     //board[7][3] = new Queen("Images/b_Queen.png", Turn::BLACK);
     board[7][4] = new King("Images/b_king.png", Turn::BLACK);
@@ -60,9 +60,9 @@ void ChessBoard::InitializeBoard()
     //board[7][6] = new Knight("Images/b_knight.png", Turn::BLACK);
     board[6][4] = new Pawn("Images/b_pawn.png", Turn::BLACK);
 
-    //board[7][7] = new Rook("Images/b_rook.png", Turn::BLACK);
+    //board[7][6] = new Rook("Images/b_rook.png", Turn::BLACK);
     
-    board[6][0] = new Pawn("Images/b_pawn.png", Turn::BLACK);
+    board[4][1] = new Pawn("Images/b_pawn.png", Turn::BLACK);
     for (int i = 0;i < 8; i++) {
         //board[6][i] = new Pawn("Images/b_pawn.png", Turn::BLACK);
     }
@@ -82,7 +82,7 @@ Turn ChessBoard::Player()
     return player;
 }
 
-vector<sf::Vector2i> ChessBoard::GenerateAllLegalMoves(Turn color_)
+vector<sf::Vector2i> ChessBoard::GenerateAllLegalMoves(Turn color_, GameState state)
 {
     vector<sf::Vector2i> ans;
 
@@ -136,6 +136,70 @@ bool  ChessBoard::KinginPath(sf::Vector2i sourcePiece, sf::Vector2i destinationP
         int ky = (destinationPiece.y - sourcePiece.y) / placement.y;
 
         return (kx == ky && kx >= 0);
+}
+
+string ChessBoard::getBoardState()
+{
+    vector<string> state;
+
+	map<ChessPiece, char> mapp = {
+		{ChessPiece::KING, 'K'},
+		{ChessPiece::QUEEN, 'Q'},
+		{ChessPiece::ROOK, 'R'},
+		{ChessPiece::BISHOP, 'B'},
+		{ChessPiece::KNIGHT, 'N'},
+		{ChessPiece::PAWN, 'P'}
+	};
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			if (board[i][j]) {
+				char playerChar = board[i][j]->getColor() == Turn::WHITE ? 'w' : 'b';
+                string pieceState = { playerChar, mapp[board[i][j]->pieceType], char(int('a') + j), char(int('0') + i) };
+                state.push_back(pieceState);
+			}
+		}
+	}
+
+	sort(state.begin(), state.end());
+
+	string finalState = "";
+	for (auto& s : state) {
+		finalState += s + " ";
+	}
+	return finalState;
+}
+
+void ChessBoard::loadDefaultPosition()
+{
+    board[0][0] = new Rook("Images/w_rook.png", Turn::WHITE);
+    board[0][1] = new Knight("Images/w_knight.png", Turn::WHITE);
+    board[0][2] = new Bishop("Images/w_bishop.png", Turn::WHITE);
+    board[0][3] = new Queen("Images/w_queen.png", Turn::WHITE);
+    board[0][4] = new King("Images/w_king.png", Turn::WHITE);
+    board[0][5] = new Bishop("Images/w_bishop.png", Turn::WHITE);
+    board[0][6] = new Knight("Images/w_knight.png", Turn::WHITE);
+    board[0][7] = new Rook("Images/w_rook.png", Turn::WHITE);
+
+    for (int i = 0;i < 8; i++) {
+        board[1][i] = new Pawn("Images/w_pawn.png", Turn::WHITE);
+    }
+
+    board[7][0] = new Rook("Images/b_rook.png", Turn::BLACK);
+    board[7][1] = new Knight("Images/b_knight.png", Turn::BLACK);
+    board[7][2] = new Bishop("Images/b_bishop.png", Turn::BLACK);
+    board[7][3] = new Queen("Images/b_Queen.png", Turn::BLACK);
+    board[7][4] = new King("Images/b_king.png", Turn::BLACK);
+    board[7][5] = new Bishop("Images/b_bishop.png", Turn::BLACK);
+    board[7][6] = new Knight("Images/b_knight.png", Turn::BLACK);
+    board[7][7] = new Rook("Images/b_rook.png", Turn::BLACK);
+
+    for (int i = 0;i < 8; i++) {
+        board[6][i] = new Pawn("Images/b_pawn.png", Turn::BLACK);
+    }
+
+    WhiteKing = std::pair<King*, sf::Vector2i>(dynamic_cast<King*>(board[0][4]), sf::Vector2i({ 0, 7 }));
+    BlackKing = std::pair<King*, sf::Vector2i>(dynamic_cast<King*>(board[7][4]), sf::Vector2i({ 7, 4 }));
 }
 
 

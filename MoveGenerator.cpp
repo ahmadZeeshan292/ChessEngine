@@ -10,6 +10,8 @@ std::vector<sf::Vector2i> MoveGenerator::rookMoves(const sf::Vector2i& from, Gam
 		{ 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }
 	};
 
+	King* pieceKing = ChessBoard::Chessboard->board[from.x][from.y]->color == Turn::BLACK ? ChessBoard::Chessboard->BlackKing.first : ChessBoard::Chessboard->WhiteKing.first;
+
 	return longRangeAttackerMoves(offset, from, ChessPiece::ROOK, state);
 }
 
@@ -24,7 +26,7 @@ std::vector<sf::Vector2i> MoveGenerator::bishopMoves(const sf::Vector2i& from, G
 	return longRangeAttackerMoves(offsets, from, ChessPiece::BISHOP, state);
 }
 
-std::vector<sf::Vector2i> MoveGenerator::knightMoves(const sf::Vector2i& from)
+std::vector<sf::Vector2i> MoveGenerator::knightMoves(const sf::Vector2i& from, GameState state)
 {
 	static const std::vector<sf::Vector2i> offsets = {
 			{2, 1}, {2, -1}, {-2, 1}, {-2, -1},
@@ -44,13 +46,51 @@ std::vector<sf::Vector2i> MoveGenerator::knightMoves(const sf::Vector2i& from)
 	}*/
 
 	std::vector<sf::Vector2i> moves;
+	Turn pieceColor = ChessBoard::Chessboard->board[from.x][from.y]->color;
+	King* pieceKing = pieceColor == Turn::BLACK ? ChessBoard::Chessboard->BlackKing.first : ChessBoard::Chessboard->WhiteKing.first;
+
+
 	for (auto& off : offsets) {
 		sf::Vector2i to = from + off;
-		if (ChessBoard::InBounds(sf::Vector2i(to))) {
-			if (!ChessBoard::Chessboard->board[to.x][to.y] || ChessBoard::Chessboard->board[to.x][to.y]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor())
+
+		if (pieceKing && pieceKing->inCheck) {
+			if (pieceKing->CheckingPieces.first == to) {
 				moves.push_back(to);
+			}
+		}
+
+		else if (ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece != std::pair<sf::Vector2i, sf::Vector2i>()) {
+			if (to == ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece.first) {
+				return vector<sf::Vector2i>{to};
+			}
+		}
+
+		else if (ChessBoard::InBounds(sf::Vector2i(to))) {
+			if (!ChessBoard::Chessboard->board[to.x][to.y])
+				moves.push_back(to);
+			else if (ChessBoard::Chessboard->board[to.x][to.y]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor()) {
+				if (ChessBoard::Chessboard->board[to.x][to.y]->pieceType == ChessPiece::KING) {
+					King* opposingKing = pieceColor == Turn::WHITE ? ChessBoard::Chessboard->BlackKing.first : ChessBoard::Chessboard->WhiteKing.first;
+
+					if (opposingKing) {
+						opposingKing->beingCheck(pair<sf::Vector2i, sf::Vector2i>{from, sf::Vector2i(-1, -1)});
+						opposingKing->inCheck = true;
+						opposingKing->checkmate = true;
+					}
+				}
+				moves.push_back(to);
+			}
 		}
 	}
+
+	if (pieceKing) {
+		if (pieceKing->inCheck) {
+			if (state == GameState::GAME && !moves.empty())
+				pieceKing->checkmate = false;
+			return moves;
+		}
+	}
+
 	return moves;
 }
 
@@ -67,46 +107,78 @@ std::vector<sf::Vector2i> MoveGenerator::QueenMoves(const sf::Vector2i& from, Ga
 	return bishop;
 }
 
-std::vector<sf::Vector2i> MoveGenerator::PawnMoves(const sf::Vector2i& from, bool hasMoved)
+std::vector<sf::Vector2i> MoveGenerator::PawnMoves(const sf::Vector2i& from, bool hasMoved, const sf::Vector2i& enpassantTarget, GameState state)
 {
 	// missing en-passant and bounds for now
 	std::vector<sf::Vector2i> moves;
 	int direction = (ChessBoard::Chessboard->board[from.x][from.y]->getColor() == Turn::WHITE ? 1 : -1);
 
-	bool enemyPieceRightDiagonal = ChessBoard::InBounds(sf::Vector2i({ from.x + direction, from.y + direction })) && ChessBoard::Chessboard->board[from.x + direction][from.y + direction]
-		&& ChessBoard::Chessboard->board[from.x + direction][from.y + direction]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor();
+	vector<sf::Vector2i> moveOffsets = { {direction, 0} };
+	vector<sf::Vector2i> attackOffsets = { {direction, -direction}, {direction, direction } };
+	Turn pieceColor = ChessBoard::Chessboard->board[from.x][from.y]->color;
+	King* pieceKing = pieceColor == Turn::BLACK ? ChessBoard::Chessboard->BlackKing.first : ChessBoard::Chessboard->WhiteKing.first;
 
-	bool enemyPieceLeftDiagonal = ChessBoard::InBounds(sf::Vector2i({ from.x + direction, from.y - direction })) && ChessBoard::Chessboard->board[from.x + direction][from.y - direction]
-		&& ChessBoard::Chessboard->board[from.x + direction][from.y - direction]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor();
+	for (auto& move : attackOffsets) {
+		sf::Vector2i pos = move + from;
 
-	if (!hasMoved) {
-		if(!ChessBoard::Chessboard->board[from.x + direction][from.y])
-			moves.push_back(sf::Vector2i({ from.x + direction, from.y }));
-
-		if (!ChessBoard::Chessboard->board[from.x + 2 * direction][from.y] && !ChessBoard::Chessboard->board[from.x + direction][from.y])
-			moves.push_back(sf::Vector2i({ from.x + 2 * direction , from.y }));
-	}
-	else if (hasMoved && !ChessBoard::Chessboard->board[from.x + direction][from.y]) {
-		moves.push_back(sf::Vector2i({ from.x + direction, from.y}));
-	}
-
-	if (ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece != std::pair<sf::Vector2i, sf::Vector2i>()) {
-		if (enemyPieceLeftDiagonal && sf::Vector2i(from.x + direction, from.y - direction) == ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece.first) {
-			return vector<sf::Vector2i>{{ from.x + direction, from.y - direction }};
+		if (pieceKing && pieceKing->inCheck) {
+			if (pieceKing->CheckingPieces.first == pos) {
+				moves.push_back(pos);
+			}
 		}
 
-		if (enemyPieceRightDiagonal && sf::Vector2i(from.x + direction, from.y + direction) == ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece.first) {
-			return vector<sf::Vector2i>{{ from.x + direction, from.y + direction }};
+		else if (ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece != std::pair<sf::Vector2i, sf::Vector2i>()) {
+			if (pos == ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece.first) {
+				return vector<sf::Vector2i>{pos};
+			}
 		}
 
-		return vector<sf::Vector2i>();
+		else {
+			if (ChessBoard::InBounds(pos) && ChessBoard::Chessboard->board[pos.x][pos.y] 
+				&& ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor()) {
+
+				if (ChessBoard::Chessboard->board[pos.x][pos.y]->pieceType == ChessPiece::KING) {
+					King* opposingKing = pieceColor == Turn::WHITE ? ChessBoard::Chessboard->BlackKing.first : ChessBoard::Chessboard->WhiteKing.first;
+
+					if (opposingKing) {
+						opposingKing->beingCheck(pair<sf::Vector2i, sf::Vector2i>{from, { -1, -1 }});
+						opposingKing->inCheck = true;
+						opposingKing->checkmate = true;
+					}
+				}
+
+				moves.push_back(sf::Vector2i(pos));
+			}
+		}
 	}
 
-	if (enemyPieceRightDiagonal)
-		moves.push_back(sf::Vector2i({ from.x + direction, from.y + direction }));
+	if (pieceKing) {
+		if (pieceKing->inCheck) {
+			if (state == GameState::GAME && !moves.empty())
+				pieceKing->checkmate = false;
+			return moves;
+		}
+	}
 
-	if (enemyPieceLeftDiagonal)
-		moves.push_back(sf::Vector2i({ from.x + direction, from.y - direction }));
+	if (ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece != std::pair<sf::Vector2i, sf::Vector2i>())
+		return moves;
+
+	for (auto& move : moveOffsets) {
+		sf::Vector2i pos = move + from;
+
+		if (!ChessBoard::Chessboard->board[pos.x][pos.y])
+			moves.push_back(sf::Vector2i(pos));
+
+		if (!hasMoved) {
+			pos = move * 2 + from;
+			if (!ChessBoard::Chessboard->board[pos.x][pos.y]) {
+				moves.push_back(sf::Vector2i(pos));
+			}
+		}
+	}
+
+	if (enpassantTarget != sf::Vector2i())
+		moves.push_back(sf::Vector2i{ enpassantTarget.x + direction, enpassantTarget.y });
 
 	return moves;
 }
@@ -138,7 +210,7 @@ std::vector<sf::Vector2i> MoveGenerator::PawnAttackMoves(const sf::Vector2i& fro
 	return moves;
 }
 
-std::vector<sf::Vector2i> MoveGenerator::KingMoves(const sf::Vector2i& from)
+std::vector<sf::Vector2i> MoveGenerator::KingMoves(const sf::Vector2i& from, GameState state)
 {
 	if (!ChessBoard::Chessboard->board[from.x][from.y]) {
 		return std::vector<sf::Vector2i>();
@@ -151,7 +223,6 @@ std::vector<sf::Vector2i> MoveGenerator::KingMoves(const sf::Vector2i& from)
 	};
 
 	Turn color = ChessBoard::Chessboard->board[from.x][from.y]->color == Turn::BLACK ? Turn::WHITE : Turn::BLACK;
-
 	
 	/*implement if color say opposite and king is in check return all pieces and there moves intersecting, blocking or taking that piece else no other piece is allowed to move*/
 	/*if (color == Turn::BLACK) {
@@ -164,14 +235,16 @@ std::vector<sf::Vector2i> MoveGenerator::KingMoves(const sf::Vector2i& from)
 			const vector<sf::Vector2i>& seenBlocks = ChessBoard::Chessboard->GenerateAllLegalMoves(Turn::BLACK);
 		}
 	}*/
-	const vector<sf::Vector2i>& seenBlocks = ChessBoard::Chessboard->GenerateAllLegalMoves(color);
-	
+	const vector<sf::Vector2i>& seenBlocks = ChessBoard::Chessboard->GenerateAllLegalMoves(color, state);
+	King* pieceKing = color == Turn::BLACK ? ChessBoard::Chessboard->BlackKing.first : ChessBoard::Chessboard->WhiteKing.first;
+
 	/*implement the check logic here have to call generate all legalmoves for the same color and check if an piece can 
 		i)   intersect
 		ii)  block
 		iii) take
 	the checking piece blocks are possible for all pieces except knight
 	*/
+
 	for (auto& move : offsets) {
 		sf::Vector2i pos = from + move;
 
@@ -181,6 +254,10 @@ std::vector<sf::Vector2i> MoveGenerator::KingMoves(const sf::Vector2i& from)
 					moves.push_back(pos);
 			}
 		}
+	}
+
+	if (!moves.empty()) {
+		pieceKing->checkmate = false;
 	}
 
 	return moves;
@@ -211,8 +288,13 @@ std::vector<sf::Vector2i> MoveGenerator::longRangeAttackerMoves(const std::vecto
 	King* pieceKing = pieceColor == Turn::BLACK ? ChessBoard::Chessboard->BlackKing.first : ChessBoard::Chessboard->WhiteKing.first;
 
 	if (pieceKing) {
-		if (pieceKing->inCheck)
-			return MoveGenerator::PieceBlockLogic(offset, from, pieceColor, pieceKing);
+		if (pieceKing->inCheck) {
+			auto moves = MoveGenerator::PieceBlockLogic(offset, from, pieceColor, pieceKing);
+			if (state == GameState::GAME && !moves.empty()) {
+				pieceKing->checkmate = false;
+			}
+			return moves;
+		}
 		else if (pieceKing->doubleCheck) 
 			return vector<sf::Vector2i>();
 	}
@@ -254,6 +336,7 @@ std::vector<sf::Vector2i> MoveGenerator::longRangeAttackerMoves(const std::vecto
 					if (opposingKing) {
 						opposingKing->beingCheck(pair<sf::Vector2i, sf::Vector2i>{from, placements});
 						opposingKing->inCheck = true;
+						opposingKing->checkmate = true;
 					}
 				}
 
@@ -278,9 +361,15 @@ std::vector<sf::Vector2i> MoveGenerator::PieceBlockLogic(const std::vector<sf::V
 		for intersecting case also find the point of inetersection
 
 	*/
-	// opposite color bishops and queens cannt instersect each other)
+
+	// logic shouldnt invoke for shortRangeAttackers aka knights and pawns
+	if (pieceKing->CheckingPieces.second == sf::Vector2i(-1, -1)) { // 
+		return std::vector<sf::Vector2i>();
+	}
+
 	Ray attackingPiece(pieceKing->CheckingPieces.first, pieceKing->CheckingPieces.second);
 
+	// opposite color bishops and queens cannt instersect each other)
 	if (ChessBoard::Chessboard->board[attackingPiece.start.x][attackingPiece.start.y]->pieceType == ChessPiece::QUEEN ||
 		ChessBoard::Chessboard->board[attackingPiece.start.x][attackingPiece.start.y]->pieceType == ChessPiece::BISHOP &&
 		ChessBoard::Chessboard->board[from.x][from.y]->pieceType == ChessPiece::BISHOP ||
@@ -300,68 +389,12 @@ std::vector<sf::Vector2i> MoveGenerator::PieceBlockLogic(const std::vector<sf::V
 			cout << "PIECE CAN BLOCK!!! " << PointOfIntersection.x << ", " << PointOfIntersection.y << endl;
 			break;
 		}
+		/* Piece take logic*/
+		else {
+			// if (from.x) // check if the attacking and selected piece lie in the same file
+		}
 	}
 	return blockingMoves;
-}
-
-std::vector<sf::Vector2i> MoveGenerator::FinalWorkFlow(const std::vector<sf::Vector2i> offsets, const sf::Vector2i& from, ChessPiece type, GameState state, Attacker attackingType)
-{
-	Turn pieceColor = ChessBoard::Chessboard->board[from.x][from.y]->color;
-	King* pieceKing = pieceColor == Turn::BLACK ? ChessBoard::Chessboard->BlackKing.first : ChessBoard::Chessboard->WhiteKing.first;
-
-	if (pieceKing->inCheck) {
-		return MoveGenerator::PieceBlockLogic(offsets, from, pieceColor, pieceKing);
-	}
-
-	std::vector<sf::Vector2i> moves;
-
-	if (state == GameState::PLAYER) {
-		// if piece relative pinned return all cells from - to 
-		if (ChessBoard::Chessboard->board[from.x][from.y]->PinningPiece != std::pair<sf::Vector2i, sf::Vector2i>()) {
-			return MoveGenerator::applyPinConstraints(offsets, from, pieceColor);
-		}
-	}
-	else {
-		sf::Vector2i idx = ChessBoard::Chessboard->board[from.x][from.y]->pinnedPiece;
-		ChessBoard::Chessboard->board[idx.x][idx.y]->PinningPiece = pair<sf::Vector2i, sf::Vector2i>();
-		ChessBoard::Chessboard->board[from.x][from.y]->pinnedPiece = sf::Vector2i();
-	}
-
-	for (auto& placements : offsets) {
-		sf::Vector2i pos = from;
-		while (true) {
-			pos += placements;
-			if (!ChessBoard::InBounds(pos))
-				break;
-
-			if (!ChessBoard::Chessboard->board[pos.x][pos.y]) {
-				moves.push_back(pos);
-				continue;
-			}
-
-			if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() == ChessBoard::Chessboard->board[from.x][from.y]->getColor())
-				break;
-
-			if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() != ChessBoard::Chessboard->board[from.x][from.y]->getColor()) {
-				/*king check logic */
-				if (ChessBoard::Chessboard->board[pos.x][pos.y]->pieceType == ChessPiece::KING) {
-					string stateString = state == GameState::GAME ? "GAME" : "PLAYER";
-					cout << "KING CHECK " + stateString << endl;
-					
-					if (ChessBoard::Chessboard->board[pos.x][pos.y]->getColor() == Turn::BLACK) {
-						ChessBoard::Chessboard->BlackKing.first->checkKing(from, placements);
-					}
-					else {
-						ChessBoard::Chessboard->WhiteKing.first->checkKing(from, placements);
-					}
-				}
-				moves.push_back(pos);
-				pinPieceLogic(from, pos, placements, type);
-				break;
-			}
-		}
-	}
-	return moves;
 }
 
 std::vector<sf::Vector2i> MoveGenerator::applyPinConstraints(const std::vector<sf::Vector2i> offsets, const sf::Vector2i& from, Turn& pieceColor)
@@ -395,6 +428,7 @@ std::vector<sf::Vector2i> MoveGenerator::applyPinConstraints(const std::vector<s
 /*
 Used only by long range Attackers
 */
+
 void MoveGenerator::pinPieceLogic(sf::Vector2i from, sf::Vector2i pos, sf::Vector2i placements, ChessPiece type)
 {
 	/*ReImplement this via Ray Logic*/
@@ -406,14 +440,13 @@ void MoveGenerator::pinPieceLogic(sf::Vector2i from, sf::Vector2i pos, sf::Vecto
 	sf::Vector2i npos = pos + placements;
 
 	/*
-
 	Loop checks first if king lies in the current path
 	if it does check the path if its obstructed by any piece
 	if piece found other than king break loop
 	else if king found without obstruction
 	give the other piece pinnning piece position and pinning placement
-
 	*/
+
 	if (ChessBoard::Chessboard->KinginPath(from, pos, placements)) {
 		while (ChessBoard::InBounds(npos)) {
 			if (ChessBoard::Chessboard->board[npos.x][npos.y]) {

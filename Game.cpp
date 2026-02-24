@@ -18,7 +18,7 @@ Game::Game(){
 
     window.setView(view);
 
-    updateState = false;
+    updateState = true;
 }
 
 void Game::Initialize()
@@ -100,6 +100,22 @@ void Game::InitializeBoard()
     }
 }
 
+void Game::UpdatePieces()
+{
+    vector<vector<Piece*>> chessBoard = ChessBoard::Chessboard->board;
+    int H = ChessBoard::Chessboard->HEIGHT / 8;
+    int W = ChessBoard::Chessboard->WIDTH / 8;
+
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            if (chessBoard[x][y]) {
+                sf::Sprite& cur = chessBoard[x][y]->GetSprite();
+                window.draw(cur);
+            }
+        }
+    }
+}
+
 void Game::PieceDragLogic(sf::Event& event, bool& isDragging, Piece*& selectedPiece, sf::Vector2i& dragOrigin)
 {
     // Mouse drag: select the piece
@@ -123,9 +139,16 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
 {
     // update game state if piece is being dragged do this only for the first dragging frame
     if (!updateState) {
-        MoveGenerator::KingMoves(ChessBoard::Chessboard->WhiteKing.second);
-        MoveGenerator::KingMoves(ChessBoard::Chessboard->BlackKing.second);
+        MoveGenerator::KingMoves(ChessBoard::Chessboard->BlackKing.second, GameState::GAME);
+        MoveGenerator::KingMoves(ChessBoard::Chessboard->WhiteKing.second, GameState::GAME);
         updateState = true;
+
+		if (ChessBoard::Chessboard->WhiteKing.first->checkmate) {
+			cout << "WHITE KING IS CHECKMATED BLACK KING WINS!" << endl;
+        }
+        else if (ChessBoard::Chessboard->BlackKing.first->checkmate) {
+			cout << "BLACK KING IS CHECKMATED WHITE KING WINS!" << endl;
+        }
     }
 
     sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
@@ -157,19 +180,53 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
                     ChessBoard::Chessboard->board[dropIndex.x][dropIndex.y] = selectedPiece;
                     ChessBoard::Chessboard->board[dragOrigin.x][dragOrigin.y] = nullptr;
 
+					// Special enpassant logic for pawns
                     if (selectedPiece->pieceType == ChessPiece::PAWN) {
-                        if (auto pawn = dynamic_cast<Pawn*>(selectedPiece)) {
-                            pawn->setMoved(true);
+                        auto pawn = dynamic_cast<Pawn*>(selectedPiece);
+
+						// Handle en-passant capture
+                        if (pawn->getEnPassantTarget() != sf::Vector2i()) {
+							sf::Vector2i capturedPawnIndex = pawn->getEnPassantTarget();
+							int direction = (selectedPiece->getColor() == Turn::WHITE) ? 1 : -1;
+                            if (dropIndex == sf::Vector2i({ capturedPawnIndex.x + direction, capturedPawnIndex.y })) {
+								cout << "EN-PASSANT CAPTURE MADE AT: " << capturedPawnIndex.x << ", " << capturedPawnIndex.y << endl;
+								delete ChessBoard::Chessboard->board[capturedPawnIndex.x][capturedPawnIndex.y];
+								ChessBoard::Chessboard->board[capturedPawnIndex.x][capturedPawnIndex.y] = nullptr;
+                            }
                         }
+						// Set en-passant target for opponent pawns if pawn moved two squares
+                        try {
+                            if (abs(dropIndex.x - dragOrigin.x) == 2) {
+                                vector<sf::Vector2i> potencialenpassant = { {dropIndex.x, dropIndex.y - 1}, {dropIndex.x, dropIndex.y + 1} };
+                                for (auto target : potencialenpassant) {
+                                    if (ChessBoard::Chessboard->InBounds(target) && ChessBoard::Chessboard->board[target.x][target.y] && ChessBoard::Chessboard->board[target.x][target.y]->pieceType == ChessPiece::PAWN) {
+                                        auto enpassantPawn = dynamic_cast<Pawn*>(ChessBoard::Chessboard->board[target.x][target.y]);
+                                        enpassantPawn->setEnPassantTarget(sf::Vector2i(dropIndex.x, dropIndex.y));
+                                        cout << "EN-PASSANT TARGET SET FOR PAWN AT: " << target.x << ", " << target.y << " TO " << dropIndex.x << ", " << dropIndex.y << endl;
+                                    }
+                                }
+                            }
+                            pawn->setMoved(true);
+                            pawn->setEnPassantTarget(sf::Vector2i());
+                        }
+                        catch (exception e) {
+                            cout << "Exception errro in en-passant logic " << e.what() << endl;
+                        }
+                    }
+                    else if (selectedPiece->pieceType == ChessPiece::ROOK) {
+                        Rook* rook = dynamic_cast<Rook*>(selectedPiece);
+                        rook->hasMoved = true;
                     }
 
                     // Update White/Black king for there chessBoard references 
-                    if (selectedPiece->pieceType == ChessPiece::KING) 
+                    if (selectedPiece->pieceType == ChessPiece::KING) {
                         selectedPiece->color == Turn::WHITE ? ChessBoard::Chessboard->WhiteKing.second = dropIndex : ChessBoard::Chessboard->BlackKing.second = dropIndex;
+                        selectedPiece->color == Turn::WHITE ? ChessBoard::Chessboard->WhiteKing.first->hasMoved = true : ChessBoard::Chessboard->BlackKing.first->hasMoved = true;
+                    }
 
                     selectedPiece->color == Turn::WHITE ? ChessBoard::Chessboard->WhiteKing.first->inCheck = false : ChessBoard::Chessboard->BlackKing.first->inCheck = false;
-                    
-                    if (selectedPiece->pinnedPiece != sf::Vector2i()) {
+                    bool isSelectedPiecePinned = selectedPiece->pinnedPiece != sf::Vector2i({ 0, 0 });
+                    if (isSelectedPiecePinned) {
                         sf::Vector2i idx = selectedPiece->pinnedPiece;
                         ChessBoard::Chessboard->board[idx.x][idx.y]->PinningPiece = pair<sf::Vector2i, sf::Vector2i>();
                         selectedPiece->pinnedPiece = sf::Vector2i();
@@ -181,6 +238,11 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
                     isDragging = false;
                     updateState = false;
 
+					cout << "Board State updated to: " << ChessBoard::Chessboard->getBoardState() << endl;
+
+					ChessBoard::Chessboard->WhiteKing.first->checkmate = ChessBoard::Chessboard->WhiteKing.first->inCheck;
+					ChessBoard::Chessboard->BlackKing.first->checkmate = ChessBoard::Chessboard->BlackKing.first->inCheck;
+
                 }
                 else {
                     isDragging = false;
@@ -191,22 +253,6 @@ void Game::updatePieceCordinates(sf::Event& event, bool& isDragging, Piece*& sel
             else {
                 isDragging = false;
                 selectedPiece->GetSprite().setOrigin(0, 0);
-            }
-        }
-    }
-}
-
-void Game::UpdatePieces()
-{
-    vector<vector<Piece*>> chessBoard = ChessBoard::Chessboard->board;
-    int H = ChessBoard::Chessboard->HEIGHT / 8;
-    int W = ChessBoard::Chessboard->WIDTH / 8;
-
-    for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 8; y++) {
-            if (chessBoard[x][y]) {
-                sf::Sprite& cur = chessBoard[x][y]->GetSprite();
-                window.draw(cur);
             }
         }
     }

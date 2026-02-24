@@ -9,4 +9,7 @@ std::vector<sf::Vector2i> Rook::legalMoves(const sf::Vector2i& from, GameState s
 	return vector<sf::Vector2i>();
 }
 
-Rook::Rook(string path, Turn color_) : Piece(path, color_, ChessPiece::ROOK) {}
+Rook::Rook(string path, Turn color_) : Piece(path, color_, ChessPiece::ROOK) 
+{
+	hasMoved = false;
+}

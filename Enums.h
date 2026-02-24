@@ -24,4 +24,12 @@ enum class Attacker : int {
 	SHORT_RANGE
 };
 
+constexpr int idx(Turn t) {
+	return static_cast<int>(t);
+}
+
+constexpr int idx(ChessPiece p) {
+	return static_cast<int>(p);
+}
+
 

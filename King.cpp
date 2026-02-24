@@ -3,7 +3,7 @@
 std::vector<sf::Vector2i> King::legalMoves(const sf::Vector2i& from, GameState state)
 {
 	if(ChessBoard::Chessboard->board[from.x][from.y]->pieceType == ChessPiece::KING)
-		return MoveGenerator::KingMoves(from);
+		return MoveGenerator::KingMoves(from, state);
 
 	return std::vector<sf::Vector2i>();
 }
@@ -11,6 +11,9 @@ std::vector<sf::Vector2i> King::legalMoves(const sf::Vector2i& from, GameState s
 King::King(string path, Turn _color) : Piece(path, _color, ChessPiece::KING) 
 {
 	inCheck = false;
+	checkmate = false;
+	hasMoved = false;
+	doubleCheck = false;
 	CheckingPieces = pair<sf::Vector2i, sf::Vector2i>();
 }
 

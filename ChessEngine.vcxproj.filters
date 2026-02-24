@@ -55,6 +55,24 @@
     <Filter Include="Utility_Structs">
       <UniqueIdentifier>{d9749fe2-c718-4af8-8dfc-10cae7bdcc35}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BitBoard_Representation">
+      <UniqueIdentifier>{f2c50d66-564c-496d-9e1b-ad6f2a74b1ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BitBoard_Representation\Classes">
+      <UniqueIdentifier>{e76d009a-2a1b-4d4f-a58c-083dac5fd7fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BitBoard_Representation\Implementation">
+      <UniqueIdentifier>{77aaebe0-d531-4df5-a1f4-b9b2148ec125}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BitBoard_Representation\NameSpace">
+      <UniqueIdentifier>{dfbfbc29-86df-4946-8635-33acc05a9909}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BitBoard_Representation\Magic_BitBoard">
+      <UniqueIdentifier>{709678b3-478b-4fc5-bad8-b7b854bd0f8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BitBoard_Representation\BB_Magic_Algorithm">
+      <UniqueIdentifier>{98f02fe4-b014-4567-a123-3b54cf1dd9d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -93,6 +111,24 @@
     <ClCompile Include="King.cpp">
       <Filter>Models\Headers\ChessPieces\King</Filter>
     </ClCompile>
+    <ClCompile Include="BitBoard.cpp">
+      <Filter>BitBoard_Representation\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="BitBoard_Game.cpp">
+      <Filter>BitBoard_Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="BitBoard_ChessBoard_visuals.cpp">
+      <Filter>BitBoard_Representation\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="Sprite_BitBoard_Mapping.cpp">
+      <Filter>BitBoard_Representation\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="BB_MoveGenerator.cpp">
+      <Filter>BitBoard_Representation\NameSpace</Filter>
+    </ClCompile>
+    <ClCompile Include="BB_MagicAlgorithm.cpp">
+      <Filter>BitBoard_Representation\BB_Magic_Algorithm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pieces.h">
@@ -127,6 +163,30 @@
     </ClInclude>
     <ClInclude Include="Utility_Class.h">
       <Filter>Utility_Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="BitBoard.h">
+      <Filter>BitBoard_Representation\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="BitBoard_Game.h">
+      <Filter>BitBoard_Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="BitBoard_ChessBoard_visuals.h">
+      <Filter>BitBoard_Representation\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Sprite_BitBoard_Mapping.h">
+      <Filter>BitBoard_Representation\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="BB_MoveGenerator.h">
+      <Filter>BitBoard_Representation\NameSpace</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility_BB.h">
+      <Filter>BitBoard_Representation\Magic_BitBoard</Filter>
+    </ClInclude>
+    <ClInclude Include="PieceMagicStorage.h">
+      <Filter>BitBoard_Representation\BB_Magic_Algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="BB_MagicAlgorithm.h">
+      <Filter>BitBoard_Representation\BB_Magic_Algorithm</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
