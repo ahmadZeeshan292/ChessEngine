@@ -4,21 +4,8 @@
 #include "BB_MagicAlgorithm.h"
 #include <iostream>
 int main() {
-
-
-	
-		uint64_t att_mask = rookLegalMoves(0x01000000000000E7ULL, 0);
-		printBitBoard(att_mask);
 	
 	forwardMagic();
-
-	
-
-	find_mf_index();
-
-	uint64_t o = 0x008000000000007EULL;
-	printBitBoard(rookLegalMoves(o, 8));
-	//ChessBoard* Chessboard = new ChessBoard();
 	ChessBoard_BitBoard* bitBoard = new ChessBoard_BitBoard();
 
 	Game* game = new Game(bitBoard);

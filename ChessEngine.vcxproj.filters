@@ -73,6 +73,9 @@
     <Filter Include="BitBoard_Representation\BB_Magic_Algorithm">
       <UniqueIdentifier>{98f02fe4-b014-4567-a123-3b54cf1dd9d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BB_DTOs">
+      <UniqueIdentifier>{c66e4d83-bb45-4de0-ae34-4e2a45b70d5a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -128,6 +131,9 @@
     </ClCompile>
     <ClCompile Include="BB_MagicAlgorithm.cpp">
       <Filter>BitBoard_Representation\BB_Magic_Algorithm</Filter>
+    </ClCompile>
+    <ClCompile Include="zobrish_hashing.cpp">
+      <Filter>BitBoard_Representation\Implementation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -187,6 +193,12 @@
     </ClInclude>
     <ClInclude Include="BB_MagicAlgorithm.h">
       <Filter>BitBoard_Representation\BB_Magic_Algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="zobrish_hashing.h">
+      <Filter>BitBoard_Representation\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Position.h">
+      <Filter>BB_DTOs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

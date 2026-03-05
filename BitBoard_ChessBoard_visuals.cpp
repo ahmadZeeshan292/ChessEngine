@@ -39,3 +39,50 @@ void ChessBoard_BitBoard::InitializeMapping()
         }
     }
 }
+
+// function to update sprite mapping after every move
+// according to the changes inflicted in the chessBoard
+// mainly for castling and en-passant where multiple pieces can move and we need to update the mapping for all of them
+void ChessBoard_BitBoard::updateMapping()
+{
+	for (int color = 0; color < 2; color++) {
+        for (int piece = 0; piece < 6; piece++) {
+
+            if (piece == idx(ChessPiece::ROOK)) {
+
+                cout << "Updating Mapping for " << (color == 1 ? "WHITE " : "BLACK ") << " PIECE TYPE: " << piece << endl;
+
+                int index = color == 1 ? piece + 6 : piece;
+
+                uint64_t board = Board.Boards[color][piece]->board;
+                int oldbitPos = 0;
+                int newbitPos = 0;
+
+                for (auto item : spriteBitBoardMap[index].sprite_map) {
+                    if (!((1ULL << item.first) & board)) {
+                        oldbitPos = item.first;
+                    }
+                }
+
+                for (int i = 0; i < 64; i++) {
+                    if (board & 1ULL) {
+                        if (spriteBitBoardMap[index].sprite_map.find(i) == spriteBitBoardMap[index].sprite_map.end()) {
+                            newbitPos = i;
+                        }
+                    }
+                    board = board >> 1;
+                }
+
+                unordered_map<uint64_t, Sprite_Table*>& pieceMap = spriteBitBoardMap[index].sprite_map;
+
+                if (oldbitPos != newbitPos) {
+                    pieceMap[newbitPos] = std::move(pieceMap[oldbitPos]);
+                    pieceMap.erase(oldbitPos);
+                    pieceMap[newbitPos]->sprite.setPosition((newbitPos / 8 + 1) * (WIDTH / 8), (newbitPos % 8) * (HEIGHT / 8));
+                }
+            }
+        }
+	}
+}
+
+

@@ -50,15 +50,16 @@ uint64_t MoveGenerator::bishopMoves(uint64_t board, uint64_t bitPosition, uint64
 	return CheckBoard == 0x00ULL ? m : m & CheckBoard;
 }
 
-uint64_t MoveGenerator::kingMoves(uint64_t attackingMask, uint64_t bitPos, uint64_t allyBoard, bool king)
+uint64_t MoveGenerator::kingMoves(uint64_t attackingMask, uint64_t bitPos, uint64_t allyBoard, bool king, uint8_t castlingRights, bool player)
 {
 	uint64_t m = computeKingMoves(bitPos);
 	cout << "KING ATTACKINGMASK!!!!!!!!!!!!!!" << endl;
 	printBitBoard(attackingMask);
+	m = king ? m : ((m & (allyBoard | attackingMask)) ^ m) | handleCastling(allyBoard, castlingRights, player, attackingMask, bitPos);
 	cout << "KING MOVES" << endl;
 	printBitBoard(m);
-	m =  king ? m : (m & (allyBoard | attackingMask)) ^ m;
 	return m;
+
 }
 
 uint64_t MoveGenerator::knightMoves(uint64_t bitPos, uint64_t allyBoard, uint64_t CheckBoard, uint8_t pinMap[64])
@@ -148,4 +149,48 @@ uint64_t MoveGenerator::queenCheck(uint64_t board, uint64_t enemyKingPos, uint64
 void MoveGenerator::printBitBoard_MG(uint64_t bb)
 {
 	printBitBoard(bb);
+}
+
+uint64_t MoveGenerator::handleCastling(uint64_t& allyBoard, uint8_t& castlingRights, bool& player, uint64_t& attackingMask, uint8_t bitPos)
+{
+	uint64_t m = 0x00ULL;
+
+	if (player == idx(Turn::WHITE)) {
+
+		if ((1ULL << bitPos & attackingMask) == 0) {
+
+			if ((allyBoard & 0x000000000000000EULL) == 0 && (attackingMask & 0x000000000000000CULL) == 0 && castlingRights & CastlingRights::WHITE_QUEEN_SIDE) {
+				m |= 0x0000000000000004ULL;
+				cout << "WHITE QUEEN SIDE CASTLING AVAILABLE!!!!!!!!!!!!!!" << endl;
+			}
+
+			if ((allyBoard & 0x0000000000000060ULL) == 0 && (attackingMask & 0x0000000000000060ULL) == 0 && castlingRights & CastlingRights::WHITE_KING_SIDE) {
+				m |= 0x0000000000000040ULL;
+				cout << "WHITE KING SIDE CASTLING AVAILABLE!!!!!!!!!!!!!!" << endl;
+			}
+		}
+		else {
+			cout << "WHITE KING IN CHECK CANT CASTLE!!!!!!!!!!" << endl;
+		}
+	}
+
+	else {
+		if ((1ULL << bitPos & attackingMask) == 0) {
+
+			if ((allyBoard & 0x0E00000000000000ULL) == 0 && (attackingMask & 0x0C00000000000000ULL) == 0 && castlingRights & CastlingRights::BLACK_QUEEN_SIDE) {
+				m |= 0x0400000000000000ULL;
+				cout << "BLACK QUEEN SIDE CASTLING AVAILABLE!!!!!!!!!!!!!!" << endl;
+			}
+
+			if ((allyBoard & 0x6000000000000000ULL) == 0 && (attackingMask & 0x6000000000000000ULL) == 0 && castlingRights & CastlingRights::BLACK_KING_SIDE) {
+				m |= 0x4000000000000000ULL;
+				cout << "BLACK KING SIDE CASTLING AVAILABLE!!!!!!!!!!!!!!" << endl;
+			}
+		}
+		else {
+			cout << "BLACK KING IN CHECK CANT CASTLE!!!!!!!!!!" << endl;
+		}
+	}
+
+	return m;
 }

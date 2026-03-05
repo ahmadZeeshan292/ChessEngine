@@ -149,6 +149,7 @@
     <ClCompile Include="Rook.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="Sprite_BitBoard_Mapping.cpp" />
+    <ClCompile Include="zobrish_hashing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BB_MagicAlgorithm.h" />
@@ -165,11 +166,13 @@
     <ClInclude Include="Pawn.h" />
     <ClInclude Include="PieceMagicStorage.h" />
     <ClInclude Include="Pieces.h" />
+    <ClInclude Include="Position.h" />
     <ClInclude Include="Queen.h" />
     <ClInclude Include="Rook.h" />
     <ClInclude Include="Sprite_BitBoard_Mapping.h" />
     <ClInclude Include="Utility_BB.h" />
     <ClInclude Include="Utility_Class.h" />
+    <ClInclude Include="zobrish_hashing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

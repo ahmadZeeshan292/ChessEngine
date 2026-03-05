@@ -28,6 +28,8 @@ public:
 
 	void InitializeMapping();
 
+	void updateMapping();
+
 	static bool InBounds(sf::Vector2i coordinates);
 
 	Turn Player();

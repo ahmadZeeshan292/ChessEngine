@@ -5,6 +5,7 @@
 #include "Enums.h"
 #include <string>
 #include <unordered_map>
+#include "zobrish_hashing.h"
 
 static constexpr uint8_t NO_PIN = 64;
 static constexpr uint64_t DOUBLE_CHECK = 0xFFFFFFFF77777777;
@@ -28,16 +29,26 @@ class ChessBitBoards {
 public:
 	BitBoard* Boards[2][8];
 	uint8_t pinMap[64];
+	uint8_t castlingRights;
+	
+	uint8_t irreversibleMove; // count to track 50 move rule and threefold repetition
+	uint64_t zobristHash[1024]; // store zobrist hash for each position for threefold repetition detection
 
+	ZobrishHashing zobrist;
 
 	ChessBitBoards();
 	void Initialize_BitBoards();
 
 	pair<uint8_t, uint8_t> UpdateBoards(uint64_t toMask, bool player);
-	pair<uint8_t, uint8_t> makeMove(uint64_t fromMask, uint64_t toMask, int pieceType, bool player);
+	pair<int8_t, int8_t> makeMove(uint64_t fromMask, uint64_t toMask, uint8_t pieceType, bool player);
+
+	void CastlingHandling(uint64_t fromMask, uint64_t toMask, uint8_t pieceType, bool player);
 	void UpdateGameState(bool player);
 
 	bool Terminal();
-	uint64_t LegalMoves(uint64_t enemyKingPos, uint64_t bitPos, int pieceType, bool player, bool gameState);
+
+	uint64_t LegalMoves(uint64_t enemyKingPos, uint64_t bitPos, uint8_t pieceType, bool player, bool gameState);
 	uint64_t computeAttackingMask(uint64_t bitPos, bool player, bool gameState, bool detCanMove);
+
+	bool Check3FoldRepetition(uint64_t curHash);
 };

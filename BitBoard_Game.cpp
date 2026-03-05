@@ -81,7 +81,7 @@ void Game::Update(ChessBoard_BitBoard* a) {
         /*Game::UpdatePieces();*/
         Game::UpdatePieces(a);
         window.display();
-        if (a->Board.Terminal()) break;
+        //if (a->Board.Terminal()) break;
     }
 }
 
@@ -120,7 +120,7 @@ void Game::updatePieceCordinates(ChessBoard_BitBoard* a, sf::Event& event, int& 
             if (legalMoves & toMask) {
                 if (dropIndex != dragOrigin) {
 
-                    pair<uint8_t, uint8_t> vs = a->Board.makeMove(fromMask, toMask, selectedPiece, idx(a->player));
+                    pair<int8_t, int8_t> vs = a->Board.makeMove(fromMask, toMask, selectedPiece, idx(a->player));
 
                     if (vs != pair<uint8_t, uint8_t>{-1, -1}) {
                         cout << "PIECE MAPPING REMOVED PIECETYPE " <<  vs.first << " BITPOS " << vs.second << endl;
@@ -141,6 +141,8 @@ void Game::updatePieceCordinates(ChessBoard_BitBoard* a, sf::Event& event, int& 
                     cout << "old BitIdx = " << oldBitIdx << endl;
 
                     a->player = a->player == Turn::WHITE ? Turn::BLACK : Turn::WHITE;
+
+                    a->updateMapping();
                 }
 
                 draggingSprite->setOrigin(0, 0);
@@ -152,6 +154,7 @@ void Game::updatePieceCordinates(ChessBoard_BitBoard* a, sf::Event& event, int& 
                 isDragging = false;
                 draggingSprite = nullptr;
                 selectedPiece = -1;
+
             }
             else {
                 if (dropIndex != dragOrigin) {
@@ -242,6 +245,7 @@ void Game::UpdatePieces(ChessBoard_BitBoard* a)
     auto map = a->spriteBitBoardMap;
 
     for (auto const& item : map) {
+
         auto sprite_mapping = item.second.sprite_map;
         for (auto const& map : sprite_mapping) {
             sf::Sprite& cur = map.second->sprite;
@@ -251,7 +255,7 @@ void Game::UpdatePieces(ChessBoard_BitBoard* a)
             int rank = bitPosition  / 8;
             int file = bitPosition % 8;
 
-            int px = (file) * W;
+            int px = (file)*W;
             int py = (rank + 1) * H;
 
             window.draw(cur);
