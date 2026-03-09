@@ -17,14 +17,14 @@ void ChessBitBoards::Initialize_BitBoards()
 	Boards[idx(Turn::WHITE)][idx(ChessPiece::QUEEN)] = new BitBoard("Images/w_queen.png", 0x0000000000000000ULL);
 	Boards[idx(Turn::BLACK)][idx(ChessPiece::QUEEN)] = new BitBoard("Images/b_queen.png", 0x0000000000000000ULL);
 
-	Boards[idx(Turn::WHITE)][idx(ChessPiece::ROOK)] = new BitBoard("Images/w_rook.png", 0x0000000000000081ULL);
-	Boards[idx(Turn::BLACK)][idx(ChessPiece::ROOK)] = new BitBoard("Images/b_rook.png", 0x8100000000000000ULL);
+	Boards[idx(Turn::WHITE)][idx(ChessPiece::ROOK)] = new BitBoard("Images/w_rook.png", 0x0000000000000000ULL);
+	Boards[idx(Turn::BLACK)][idx(ChessPiece::ROOK)] = new BitBoard("Images/b_rook.png", 0x0000000000000000ULL);
 
-	Boards[idx(Turn::WHITE)][idx(ChessPiece::BISHOP)] = new BitBoard("Images/w_bishop.png", 0x0000000104000000ULL);
+	Boards[idx(Turn::WHITE)][idx(ChessPiece::BISHOP)] = new BitBoard("Images/w_bishop.png", 0x0000000000000000ULL);
 	Boards[idx(Turn::BLACK)][idx(ChessPiece::BISHOP)] = new BitBoard("Images/b_bishop.png", 0x0000000000000000ULL);
 
-	Boards[idx(Turn::WHITE)][idx(ChessPiece::KNIGHT)] = new BitBoard("Images/w_knight.png", 0x0000000000000000ULL);
-	Boards[idx(Turn::BLACK)][idx(ChessPiece::KNIGHT)] = new BitBoard("Images/b_knight.png", 0x0000000000000000ULL);
+	Boards[idx(Turn::WHITE)][idx(ChessPiece::KNIGHT)] = new BitBoard("Images/w_knight.png", 0x0010000000000000ULL);
+	Boards[idx(Turn::BLACK)][idx(ChessPiece::KNIGHT)] = new BitBoard("Images/b_knight.png", 0x0001000000000000ULL);
 
 	// Full Board State
 	Boards[idx(Turn::BLACK)][6] = new BitBoard("", 0x00ULL);
@@ -44,10 +44,15 @@ void ChessBitBoards::Initialize_BitBoards()
 
 	for (int i = 0; i < 2; i++) {
 		for (int j = 0; j < 6; j++) {
-			for (int k = 0; k < 64; k++) {
-				if (Boards[i][j]->board & (1ULL << k)) 
-					zobrist.updateHash(i, j, k, true); // initialize hash with piece positions
+			uint64_t board = Boards[i][j]->board;
+			int8_t k = pop_lsb(board);
+
+			while (k != -1) {
+				zobrist.make(i, j, k);
+				cout << "INITIALIZING ZOBRIST HASH FOR " << (i == idx(Turn::WHITE) ? "WHITE " : "BLACK ") << " PIECE TYPE: " << j << " AT POSITION: " << unsigned(k) << endl;
+				k = pop_lsb(board);
 			}
+
 		}
 	}
 }
@@ -111,22 +116,43 @@ pair<int8_t, int8_t> ChessBitBoards::makeMove(uint64_t fromMask, uint64_t toMask
 	Boards[player][pieceType]->board &= ~fromMask;
 	Boards[player][pieceType]->board |= toMask;
 
-	zobrist.updateHash(player, pieceType, fromMask, true); // remove piece from old position in hash
-	
-	// Update Game State if capture detected and return the piece type and bit position
-	pair <int8_t, int8_t> visuals = UpdateBoards(toMask, player);
+	zobrist.make(player, pieceType, fromMask); // remove piece from old position in hash
+
+	pair <int8_t, int8_t> visuals = UpdateBoards(toMask, player); // returns captured piecetype and bitPos
+
 	if (visuals.first != -1) {
-		zobrist.updateHash(player, pieceType, toMask, true, false, 0, true, visuals.first, visuals.second); // update hash for captured piece
-		irreversibleMove = 0; // reset irreversible move counter on capture
+		zobrist.unmake(player, visuals.first, visuals.second);
+		irreversibleMove = 0;
+
+		// if captured piece was an rook update castling rights
+		if (visuals.first == idx(ChessPiece::ROOK)) {
+			uint8_t castlingType = visuals.first == 0 ? CastlingRights::WHITE_QUEEN_SIDE : visuals.first == 7 ? CastlingRights::WHITE_KING_SIDE :
+				                   visuals.first == 56 ? CastlingRights::BLACK_QUEEN_SIDE : CastlingRights::BLACK_KING_SIDE;
+
+			zobrist.castling(castlingRights, castlingRights & castlingType); 
+			castlingRights &= ~castlingType;
+
+			cout << "CASTLING RIGHTS LOST FOR " << (player == idx(Turn::WHITE) ? "WHITE " : "BLACK ") << ((castlingType | CastlingRights::WHITE_KING_SIDE || castlingType | CastlingRights::BLACK_KING_SIDE) ? "KING_SIDE" : "QUEEN SIDE") << endl;
+		}
+
 		memset(zobristHash, 0ULL, 1024); // reset zobrist hash history on capture 
-	}
-	else {
-		zobrist.updateHash(player, pieceType, toMask, true); // add piece to new position in hash
 	}
 
 	zobristHash[irreversibleMove % 1024] = zobrist.getHash(); // store current hash for threefold repetition detection
 	irreversibleMove++; // increment irreversible move counter for 50 move rule 
 	UpdateGameState(player);
+
+	if (pieceType == idx(ChessPiece::ROOK)) {
+		uint8_t castlingType = fromMask == 0x0000000000000080ULL ? CastlingRights::WHITE_KING_SIDE : fromMask == 0x0000000000000001ULL ? CastlingRights::WHITE_QUEEN_SIDE :
+			fromMask == 0x8000000000000000ULL ? CastlingRights::BLACK_KING_SIDE : CastlingRights::BLACK_QUEEN_SIDE;
+
+		if ((castlingRights & castlingType) != 0) {
+			zobrist.castling(castlingRights, castlingRights & castlingType);
+			castlingRights &= ~castlingType;
+
+			cout << "CASTLING RIGHTS LOST FOR " << (player == idx(Turn::WHITE) ? "WHITE " : "BLACK ") << ((castlingType | CastlingRights::WHITE_KING_SIDE || castlingType | CastlingRights::BLACK_KING_SIDE) ? "KING_SIDE" : "QUEEN SIDE") << endl;
+		}
+	}
 
 	return visuals;
 }
@@ -135,8 +161,6 @@ void ChessBitBoards::CastlingHandling(uint64_t fromMask, uint64_t toMask, uint8_
 {
 	if (pieceType == idx(ChessPiece::KING)) {
 		// Update Castling Rights if King moves
-		castlingRights &= player == idx(Turn::WHITE) ? ~(CastlingRights::WHITE_KING_SIDE | CastlingRights::WHITE_QUEEN_SIDE) :
-			                                           ~(CastlingRights::BLACK_KING_SIDE | CastlingRights::BLACK_QUEEN_SIDE);
 
 		bool isCastlingMove = !(toMask & MoveGenerator::kingMoves(0x00ULL, log2(fromMask), 0x00ULL, true, castlingRights, player));
 
@@ -144,53 +168,29 @@ void ChessBitBoards::CastlingHandling(uint64_t fromMask, uint64_t toMask, uint8_
 
 		// Handle Castling Move
 		if (isCastlingMove) {
-			if (toMask == 0x0000000000000004ULL) { // white queen side castling
-				Boards[idx(Turn::WHITE)][idx(ChessPiece::ROOK)]->board &= ~0x0000000000000001ULL; // remove rook from a1
-				Boards[idx(Turn::WHITE)][idx(ChessPiece::ROOK)]->board |=  0x0000000000000008ULL; // place rook on d1
-				cout << "WHITE QUEEN SIDE CASTLING MOVE DETECTED!!!!!!!!!!" << endl;
-				zobrist.updateHash(player, pieceType, toMask, false, true, CastlingRights::WHITE_QUEEN_SIDE);
-			}
-			else if (toMask == 0x0000000000000040ULL) { // white king side castling
-				Boards[idx(Turn::WHITE)][idx(ChessPiece::ROOK)]->board &= ~0x0000000000000080ULL; // remove rook from h1
-				Boards[idx(Turn::WHITE)][idx(ChessPiece::ROOK)]->board |= 0x0000000000000020ULL; // place rook on f1
-				cout << "WHITE KING SIDE CASTLING MOVE DETECTED!!!!!!!!!!" << endl;
-				zobrist.updateHash(player, pieceType, toMask, false, true, CastlingRights::WHITE_KING_SIDE);
-			}
-			else if (toMask == 0x0400000000000000ULL) { // black queen side castling
-				Boards[idx(Turn::BLACK)][idx(ChessPiece::ROOK)]->board &= ~0x0100000000000000ULL; // remove rook from a8
-				Boards[idx(Turn::BLACK)][idx(ChessPiece::ROOK)]->board |= 0x0800000000000000ULL; // place rook on d8
-				cout << "BLACK QUEEN SIDE CASTLING MOVE DETECTED!!!!!!!!!!" << endl;
-				zobrist.updateHash(player, pieceType, toMask, false, true, CastlingRights::BLACK_QUEEN_SIDE);
-			}
-			else if (toMask == 0x4000000000000000ULL) { // black king side castling
-				Boards[idx(Turn::BLACK)][idx(ChessPiece::ROOK)]->board &= ~0x8000000000000000ULL; // remove rook from h8
-				Boards[idx(Turn::BLACK)][idx(ChessPiece::ROOK)]->board |= 0x2000000000000000ULL; // place rook on f8
-				cout << "BLACK KING SIDE CASTLING MOVE DETECTED!!!!!!!!!!" << endl;
-				zobrist.updateHash(player, pieceType, toMask, false, true, CastlingRights::BLACK_KING_SIDE);
-			}
-		}
-	}
 
-	if (pieceType == idx(ChessPiece::ROOK)) {
-		if (player == idx(Turn::WHITE)) {
-			if (fromMask == 0x0000000000000001ULL) { // a1 rook
-				castlingRights &= ~CastlingRights::WHITE_QUEEN_SIDE;
-				cout << "WHITE QUEEN SIDE CASTLING LOST!!!!!!!!!!" << endl;
+			uint64_t fromRook, toRook;
+
+			if (toMask > fromMask) { // king side castling
+				fromRook = player == idx(Turn::WHITE) ? 0x0000000000000080ULL : 0x8000000000000000ULL;
+				toRook = player == idx(Turn::WHITE) ? 0x0000000000000020ULL : 0x2000000000000000ULL;
 			}
-			else if (fromMask == 0x0000000000000080ULL) { // h1 rook
-				castlingRights &= ~CastlingRights::WHITE_KING_SIDE;
-				cout << "WHITE KING SIDE CASTLING LOST!!!!!!!!!!" << endl;
+			else { // queen side castling
+				fromRook = player == idx(Turn::WHITE) ? 0x0000000000000001ULL : 0x0100000000000000ULL;
+				toRook = player == idx(Turn::WHITE) ? 0x0000000000000008ULL : 0x0800000000000000ULL;
 			}
-		}
-		else {
-			if (fromMask == 0x0100000000000000ULL) { // a8 rook
-				castlingRights &= ~CastlingRights::BLACK_QUEEN_SIDE;
-				cout << "BLACK QUEEN SIDE CASTLING LOST!!!!!!!!!!" << endl;
-			}
-			else if (fromMask == 0x8000000000000000ULL) { // h8 rook
-				castlingRights &= ~CastlingRights::BLACK_KING_SIDE;
-				cout << "BLACK KING SIDE CASTLING LOST!!!!!!!!!!" << endl;
-			}
+
+			uint8_t castlingType = player == idx(Turn::WHITE) ? CastlingRights::WHITE_KING_SIDE | CastlingRights::WHITE_QUEEN_SIDE : 
+														CastlingRights::BLACK_KING_SIDE | CastlingRights::BLACK_QUEEN_SIDE;
+
+			zobrist.unmake(player, idx(ChessPiece::ROOK), log2(fromRook));
+			zobrist.make(player, idx(ChessPiece::ROOK), log2(toRook));
+			zobrist.castling(castlingRights,  castlingRights & castlingType); // update castling rights in hash
+
+			Boards[idx(Turn::WHITE)][idx(ChessPiece::ROOK)]->board &= ~fromRook; // remove rook from a1
+			Boards[idx(Turn::WHITE)][idx(ChessPiece::ROOK)]->board |= toRook; // place rook on d1
+
+			castlingRights &= ~castlingType; // remove castling rights after castling move
 		}
 	}
 }
@@ -208,9 +208,23 @@ void ChessBitBoards::UpdateGameState(bool player)
 	PlayerKingPos = log2(Boards[!player][idx(ChessPiece::KING)]->board);
 
 	cout << "\nUPDATING GAME STATE FOR OPPONENT: " << endl;
-	printf("IS %s KING IN CHECK: %b", !player == idx(Turn::BLACK) ? "BLACK" : "WHITE", Boards[!player][7]->board != 0x00ULL);
+
+	/*printf("IS %s KING IN CHECK: %s\n",
+		(player == idx(Turn::BLACK)) ? "BLACK" : "WHITE",
+		(Boards[player][7]->board != 0x00ULL) ? "true" : "false");*/
+
+	/*cout << "CHECK BOARD FOR OPPONENT: " << endl;
+	MoveGenerator::printBitBoard_MG(Boards[player][7]->board);*/
+
 	if (Boards[player][7]->board != 0x00ULL)
 		computeAttackingMask(PlayerKingPos, !player, true, true);
+
+	/*printf("IS %s KING IN CHECK: %s\n",
+		(player == idx(Turn::BLACK)) ? "BLACK" : "WHITE",
+		(Boards[player][7]->board != 0x00ULL) ? "true" : "false");*/
+
+	/*cout << "FINAL CHECKING MASK: " << endl;
+	MoveGenerator::printBitBoard_MG(Boards[player][7]->board);*/
 
 	Terminal();
 
@@ -265,6 +279,13 @@ uint64_t ChessBitBoards::LegalMoves(uint64_t enemyKingPos, uint64_t bitPos, uint
 
 	switch (pieceType) {
 	case(idx(ChessPiece::ROOK)): {
+
+		cout << "BOARD STATE FOR ROOK MOVES: " << endl;
+		MoveGenerator::printBitBoard_MG(Boards[player][7]->board);
+
+		cout << "CHECK BOARD STATE FOR ROOK MOVES: " << endl;
+		MoveGenerator::printBitBoard_MG(Boards[!player][7]->board);
+
 		moves = !gameState ?
 			MoveGenerator::rookMoves(board, bitPos, Boards[player][6]->board, Boards[player][7]->board, pinMap) :
 			MoveGenerator::rookCheck(board, enemyKingPos, bitPos, Boards[player][6]->board, pinMap);
@@ -349,17 +370,23 @@ uint64_t ChessBitBoards::computeAttackingMask(uint64_t bitPos, bool player, bool
 		}
 	}
 
+	if (gameState && detCanMove) {
+		cout << "DEBUG: gameState=" << (int)gameState << " detCanMove=" << (int)detCanMove << " player=" << int(player) << std::endl;
+		cout << "HERE IDIOT" << endl;
+	}
+
 	if (gameState) {
 		cout << "FINAL KING CHECK ATTACK MASK: " << endl;
 		MoveGenerator::printBitBoard_MG(mask);
 	}
 
-
 	if (gameState) {
+		
 		Boards[player][7]->board = mask;
 		if (mask != 0x00ULL) {
-			printf(player == idx(Turn::WHITE) ? "WHITE" : "BLACK", "  KING IN CHECK!!!!!!!!!!\n");
+			printf("%s KING IN CHECK!!!!!!!!!!\n", player == idx(Turn::WHITE) ? "WHITE" : "BLACK");
 			cout << "KING IN CHECK ATTACKING MASK: " << endl;
+			MoveGenerator::printBitBoard_MG(Boards[player][7]->board);
 		}
 
 		if (count >= 2) {
@@ -371,7 +398,7 @@ uint64_t ChessBitBoards::computeAttackingMask(uint64_t bitPos, bool player, bool
 		if (detCanMove) {
 			cout << idx(Turn::BLACK) << " " << idx(Turn::WHITE) << endl;
 			printf("PLAYER = %s\n", player == idx(Turn::BLACK) ? "Black " : "White ");
-			if ((Boards[!player][7]->board != 0x00ULL && !canMove) || (Boards[!player][7]->board = DOUBLE_CHECK && !canMove)) {
+			if ((Boards[!player][7]->board != 0x00ULL && !canMove)) {
 				printf("%s KING IS CHECKMATED AS NO MOVES ARE AVAILABLE\n", !player == idx(Turn::BLACK) ? "Black " : "White ");
 				Boards[!player][7]->board = CHECKMATE; 
 			}
@@ -396,7 +423,7 @@ bool ChessBitBoards::Check3FoldRepetition(uint64_t curHash)
 			count++;
 		
 		cout << "ZOBRIST HASH IN HISTORY: " << zobristHash[i] << " CURRENT HASH: " << curHash << " COUNT: " << count << endl;
-		if (count == 3) {
+		if (count >= 3) {
 			cout << "THREEFOLD REPETITION DETECTED DRAW OFFERED" << endl;
 			cout << "Irreversible Moves: " << unsigned(irreversibleMove) << endl;
 			return true;

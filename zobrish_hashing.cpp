@@ -26,33 +26,35 @@ void ZobrishHashing::init_zobrish_table()
 		}
 	}
 
-	for (int i = 0; i < 4; i++) { // Castling rights
+	for (int i = 0; i < 16; i++) { // Castling rights
 		zobrishCastling[i] = create_random_number();
 	}
 
 	for (int i = 0; i < 8; i++) { // En passant file
 		zobrishEnPassant[i] = create_random_number();
 	}
+
+	turnHash = create_random_number();
+	currentHash = zobrishCastling[15];
 }
 
-void ZobrishHashing::updateHash(bool player, uint8_t pieceType, uint8_t square, bool normal, bool castling, uint8_t castling_type, bool capture, uint8_t enemyPieceType, uint8_t sqaure)
+void ZobrishHashing::make(bool player, uint8_t pieceType, uint8_t square)
 {
-	if (normal) {
-		if (capture)
-			currentHash ^= zobrishTable[!player * 6 * 64 + enemyPieceType * 64 + sqaure]; // remove captured piece from hash
+	currentHash ^= turnHash;
+	currentHash ^= zobrishTable[player * 6 * 64 + pieceType * 64 + square];
+}
 
-		currentHash ^= zobrishTable[player * 6 * 64 + pieceType * 64 + square]; // add moving piece to hash
-	}
-	else {
-		if (castling) {
-			currentHash ^= zobrishCastling[castling_type]; 
-		}
-		else { // en passant
-			currentHash ^= zobrishEnPassant[sqaure % 8]; // remove en passant file from hash
-			currentHash ^= zobrishTable[!player * 6 * 64 + idx(ChessPiece::PAWN) * 64 + sqaure - (player ? 8 : -8)]; // remove captured pawn from hash
-		}
-	}
+// used for captures doesnt update turnHash
+void ZobrishHashing::unmake(bool player, uint8_t pieceType, uint8_t square)
+{
+	currentHash ^= zobrishTable[player * 6 * 64 + pieceType * 64 + square];
+}
 
+void ZobrishHashing::castling(uint8_t new_castling_rights, uint8_t previous_castling_rights)
+{
+	//currentHash ^= turnHash;
+	currentHash ^= zobrishCastling[previous_castling_rights];
+	currentHash ^= zobrishCastling[new_castling_rights];
 }
 
 

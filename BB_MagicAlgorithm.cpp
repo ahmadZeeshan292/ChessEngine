@@ -331,7 +331,7 @@ void printBitBoard(uint64_t bb)
 		cout << (char)i << " ";
 	}
 
-    cout << endl << endl;;
+    cout << endl << endl;
 }
 
 

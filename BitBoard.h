@@ -32,7 +32,7 @@ public:
 	uint8_t castlingRights;
 	
 	uint8_t irreversibleMove; // count to track 50 move rule and threefold repetition
-	uint64_t zobristHash[1024]; // store zobrist hash for each position for threefold repetition detection
+	uint64_t zobristHash[50]; // store zobrist hash for each position for threefold repetition detection
 
 	ZobrishHashing zobrist;
 

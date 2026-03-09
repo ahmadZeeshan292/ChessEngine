@@ -3,8 +3,10 @@
 #include "BitBoard_ChessBoard_visuals.h"
 #include "BB_MagicAlgorithm.h"
 #include <iostream>
+#include <intrin.h>
+
 int main() {
-	
+
 	forwardMagic();
 	ChessBoard_BitBoard* bitBoard = new ChessBoard_BitBoard();
 

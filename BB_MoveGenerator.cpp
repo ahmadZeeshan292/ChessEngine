@@ -22,6 +22,9 @@ uint64_t MoveGenerator::rookMoves(uint64_t board, uint64_t bitPosition, uint64_t
 	m = (m & allyBoard) ^ m;
 	printBitBoard(m);
 
+	cout << "PRINTING CHECKBOARD FOR ROOK MOVES" << endl;
+	printBitBoard(CheckBoard);
+
 	return CheckBoard == 0x00ULL ? m : m & CheckBoard;
 }
 

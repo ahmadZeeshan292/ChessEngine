@@ -40,4 +40,13 @@ constexpr int idx(ChessPiece p) {
 	return static_cast<int>(p);
 }
 
+inline int pop_lsb(uint64_t& mask) {
+	unsigned long index;
+	if (_BitScanForward64(&index, mask)) { 
+		mask &= (mask - 1);              
+		return (int)index;
+	}
+	return -1;
+}
+
 
