@@ -8,7 +8,7 @@ ChessBitBoards::ChessBitBoards()
 
 void ChessBitBoards::Initialize_BitBoards()
 {
-	Boards[idx(Turn::WHITE)][idx(ChessPiece::PAWN)] = new BitBoard("Images/w_pawn.png", 0x0000000000000000ULL);
+	Boards[idx(Turn::WHITE)][idx(ChessPiece::PAWN)] = new BitBoard("Images/w_pawn.png", 0x0000000000000100ULL);
 	Boards[idx(Turn::BLACK)][idx(ChessPiece::PAWN)] = new BitBoard("Images/b_pawn.png", 0x0000000000000000ULL);
 
 	Boards[idx(Turn::WHITE)][idx(ChessPiece::KING)] = new BitBoard("Images/w_king.png", 0x0000000000000010ULL);
@@ -314,6 +314,12 @@ uint64_t ChessBitBoards::LegalMoves(uint64_t enemyKingPos, uint64_t bitPos, uint
 	case(idx(ChessPiece::KING)): {
 		uint64_t attackingMask = computeAttackingMask(bitPos, player, gameState, false);
 		moves = MoveGenerator::kingMoves(attackingMask, bitPos, Boards[player][6]->board, false, castlingRights, player);
+		break;
+	}
+	case(idx(ChessPiece::PAWN)): {
+		moves = !gameState ?
+			MoveGenerator::PawnMoves(board, bitPos, Boards[player][6]->board, Boards[player][7]->board, pinMap, player) :
+			MoveGenerator::PawnCheck(board, enemyKingPos, bitPos, Boards[player][6]->board, pinMap, player);
 		break;
 	}
 	}

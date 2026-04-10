@@ -76,6 +76,9 @@
     <Filter Include="BB_DTOs">
       <UniqueIdentifier>{c66e4d83-bb45-4de0-ae34-4e2a45b70d5a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BB_MCTS">
+      <UniqueIdentifier>{136449d5-5531-4b78-8677-0eb5ec190fbb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -134,6 +137,12 @@
     </ClCompile>
     <ClCompile Include="zobrish_hashing.cpp">
       <Filter>BitBoard_Representation\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="MCTS.cpp">
+      <Filter>BB_MCTS</Filter>
+    </ClCompile>
+    <ClCompile Include="TicTacToe.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -198,6 +207,12 @@
       <Filter>BitBoard_Representation\Classes</Filter>
     </ClInclude>
     <ClInclude Include="Position.h">
+      <Filter>BB_DTOs</Filter>
+    </ClInclude>
+    <ClInclude Include="MCTS.h">
+      <Filter>BB_MCTS</Filter>
+    </ClInclude>
+    <ClInclude Include="TicTacToe.h">
       <Filter>BB_DTOs</Filter>
     </ClInclude>
   </ItemGroup>

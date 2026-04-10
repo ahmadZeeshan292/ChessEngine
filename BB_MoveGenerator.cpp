@@ -5,6 +5,35 @@
 #include "BitBoard.h"
 #include <iostream>
 
+uint64_t MoveGenerator::PawnMoves(uint64_t board, uint64_t bitPosition, uint64_t allyBoard, uint64_t CheckBoard, uint8_t pinMap[64], bool player)
+{
+	uint64_t m = 0x00ULL;
+
+	if (CheckBoard == DOUBLE_CHECK) { cout << "KING IN DOUBLE CHECK ONLY KING MOVES ALLOWED" << endl; return 0x00ULL; }
+
+	if (pinMap[bitPosition] != NO_PIN) {
+		cout << "PAWN IS PINNED TO SQUARE: " << unsigned(pinMap[bitPosition]) << endl;
+		uint64_t pinRay = computeCheckRay(pinMap[bitPosition], bitPosition) & m & ~(1ULL << bitPosition);
+		printBitBoard(pinRay | (1ULL << pinMap[bitPosition]));
+		return pinRay != 0x00ULL ? pinRay | (1ULL << pinMap[bitPosition]) : pinRay;
+	}
+
+	bool firstMove = player == idx(Turn::WHITE) ? (bitPosition >= 8 && bitPosition <= 15) : (bitPosition >= 48 && bitPosition <= 55);
+	cout << "FIRST MOVE FOR THIS PAWN: " << (firstMove ? "YES" : "NO") << " BitPositon: " << bitPosition << endl;
+
+	// Moves for Pawns
+	m = player ? ((1ULL << bitPosition) >> 8) : ((1ULL << bitPosition) << 8); // single push
+	if (firstMove) m |= player ? ((1ULL << bitPosition) >> 16) : ((1ULL << bitPosition) << 16); // double push
+
+	m |= computePawnAttacks(bitPosition, player) & (board & allyBoard);
+	printBitBoard(m);
+
+	m = (m & allyBoard) ^ m;
+	printBitBoard(m);
+
+	return CheckBoard == 0x00ULL ? m : m & CheckBoard;
+}
+
 uint64_t MoveGenerator::rookMoves(uint64_t board, uint64_t bitPosition, uint64_t allyBoard, uint64_t CheckBoard, uint8_t pinMap[64]) {
 
 	if (CheckBoard == DOUBLE_CHECK) { cout << "KING IN DOUBLE CHECK ONLY KING MOVES ALLOWED" << endl; return 0x00ULL; }
@@ -101,8 +130,8 @@ uint64_t MoveGenerator::rookCheck(uint64_t board, uint64_t enemyKingPos, uint64_
 	// check if only one piece is blocking the ray between rook and king
 	if (isPinned != 0 && (isPinned & (isPinned - 1)) == 0) {
 		cout << "ROOK PIN DETECTED!!!!!!!!!!!!!!" << endl;
-		pinMap[uint8_t(log2(isPinned))] = bitPosition;
 		printBitBoard(isPinned);
+		pinMap[uint8_t(pop_lsb(isPinned))] = bitPosition;
 		printBitBoard(checkRay);
 	}
 
@@ -120,11 +149,11 @@ uint64_t MoveGenerator::bishopCheck(uint64_t board, uint64_t enemyKingPos, uint6
 	uint64_t checkRay = computeCheckRay(bitPosition, enemyKingPos) & bishopAttackMask(bitPosition, true);
 	uint64_t isPinned = checkRay & (board ^ allyBoard) & ~(1ULL << enemyKingPos); // only consider pieces between rook and king
 
-	// check if only one piece is blocking the ray between rook and king
+	// check if only one piece is blocking the ray between rook and king (Piece is pinning some piece to the king)
 	if (isPinned != 0 && (isPinned & (isPinned - 1)) == 0) {
 		cout << "BISHOP PIN DETECTED!!!!!!!!!!!!!!" << endl;
-		pinMap[uint8_t(log2(isPinned))] = bitPosition;
 		printBitBoard(isPinned);
+		pinMap[uint8_t(pop_lsb(isPinned))] = bitPosition;
 		printBitBoard(checkRay);
 	}
 
@@ -142,6 +171,15 @@ uint64_t MoveGenerator::knightCheck(uint64_t board, uint64_t enemyKingPos, uint6
 	if (m & 1ULL << enemyKingPos) { cout << "KNIGHT CHECK DETECTED!!!!!!!!!!!!!!" << endl; printBitBoard(1ULL << enemyKingPos); }
 
 	return m & 1ULL << enemyKingPos ? 1ULL << bitPos  : 0x00ULL;
+}
+
+uint64_t MoveGenerator::PawnCheck(uint64_t board, uint64_t enemyKingPos, uint64_t bitPosition, uint64_t allyBoard, uint8_t(&pinMap)[64], bool player)
+{
+	uint64_t m = computePawnAttacks(bitPosition, player) & board & allyBoard;
+
+	if (m & 1ULL << enemyKingPos) { cout << "PAWN CHECK DETECTED!!!!!!!!!!!!!!" << endl; printBitBoard(1ULL << enemyKingPos); }
+
+	return m & 1ULL << enemyKingPos ? 1ULL << bitPosition : 0x00ULL;
 }
 
 uint64_t MoveGenerator::queenCheck(uint64_t board, uint64_t enemyKingPos, uint64_t bitPos, uint64_t allyBoard, uint8_t(&pinMap)[64])

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+uint64_t PawnAttacks[2][64];
 uint64_t RookAttacks[64][4096];
 uint64_t BishopAttacks[64][512];
 uint64_t RookShifts[64];

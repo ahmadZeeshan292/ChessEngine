@@ -28,6 +28,8 @@ uint64_t computeKnightMask(uint64_t bitPos);
 uint64_t computeKingMoves(uint64_t bitPos);
 uint64_t computeKnightMoves(uint64_t bitPos);
 
+uint64_t computePawnAttacks(uint64_t bitPos, bool player);
+
 void find_mf_index();
 
 void printBitBoard(uint64_t bb);

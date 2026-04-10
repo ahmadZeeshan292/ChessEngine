@@ -6,7 +6,7 @@ class ChessBitBoards;
 
 namespace MoveGenerator{
 
-	
+	uint64_t PawnMoves(uint64_t board, uint64_t bitPosition, uint64_t allyBoard, uint64_t CheckBoard, uint8_t pinMap[64], bool player);
 	uint64_t rookMoves(uint64_t board, uint64_t bitPosition, uint64_t allyBoard, uint64_t CheckBoard, uint8_t pinMap[64]);
 	uint64_t bishopMoves(uint64_t board, uint64_t bitPosition, uint64_t allyBoard, uint64_t CheckBoard, uint8_t pinMap[64]);
 	uint64_t kingMoves(uint64_t attackingMask, uint64_t bitPos, uint64_t allyBoard, bool king, uint8_t castlingRights, bool player);
@@ -17,6 +17,7 @@ namespace MoveGenerator{
 	// returns an bitBoard in which pieces can move only to the lighted squares to defend the king
 	// this is stored as Board[player][7] 
 
+	uint64_t PawnCheck(uint64_t board, uint64_t enemyKingPos, uint64_t bitPosition, uint64_t allyBoard, uint8_t(&pinMap)[64], bool player);
 	uint64_t rookCheck(uint64_t board, uint64_t enemyKingPos, uint64_t bitPosition, uint64_t allyBoard, uint8_t (& pinMap)[64]);
 	uint64_t bishopCheck(uint64_t board, uint64_t enemyKingPos, uint64_t bitPosition, uint64_t allyBoard, uint8_t (& pinMap)[64]);
 	uint64_t knightCheck(uint64_t board, uint64_t enemyKingPos, uint64_t bitPos, uint64_t allyBoard, uint8_t (& pinMap)[64]);

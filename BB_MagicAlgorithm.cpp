@@ -86,6 +86,9 @@ void forward(bool bishop, uint64_t bitPos)
 
 void forwardMagic()
 {
+    const uint64_t notFileA = 0xFEFEFEFEFEFEFEFEULL; // Everything except File A
+    const uint64_t notFileH = 0x7F7F7F7F7F7F7F7FULL; // Everything except File H
+
     for (int i = 0; i < 64; i++) {
         cout << "BitPosition " << i << endl;
 
@@ -94,6 +97,9 @@ void forwardMagic()
 
         cout << "Rook!!!!!!!!!!!!!!!!" << endl;
 		forward(false, i);  // rook 
+
+        PawnAttacks[0][i] = ((1ULL << i) << 7 & notFileH) | ((1ULL << i) << 9 & notFileA);
+        PawnAttacks[1][i] = ((1ULL << i) >> 9 & notFileH) | ((1ULL << i) >> 7 & notFileA);
 
         kingMoves[i] = computeKingMask(i); // king
         knightMoves[i] = computeKnightMask(i); //knight
@@ -294,6 +300,11 @@ uint64_t computeKingMoves(uint64_t bitPos)
 uint64_t computeKnightMoves(uint64_t bitPos)
 {
     return knightMoves[bitPos];
+}
+
+uint64_t computePawnAttacks(uint64_t bitPos, bool player)
+{
+    return PawnAttacks[player][bitPos];
 }
 
 void find_mf_index() {

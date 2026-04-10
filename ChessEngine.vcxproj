@@ -104,11 +104,18 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\Downloads_D\libtorch-win-shared-with-deps-2.10.0+cu130\libtorch\include\torch\csrc\api\include\torch;D:\Downloads_D\libtorch-win-shared-with-deps-2.10.0+cu130\libtorch\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;torch.lib;
+torch_cuda.lib;
+torch_cpu.lib;
+c10.lib
+;c10_cuda.lib;
+cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Downloads_D\libtorch-win-shared-with-deps-2.10.0+cu130\libtorch\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -143,12 +150,14 @@
     <ClCompile Include="Knight.cpp" />
     <ClCompile Include="Knight.h" />
     <ClCompile Include="MoveGenerator.cpp" />
+    <ClCompile Include="MCTS.cpp" />
     <ClCompile Include="Pawn.cpp" />
     <ClCompile Include="Pieces.cpp" />
     <ClCompile Include="Queen.cpp" />
     <ClCompile Include="Rook.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="Sprite_BitBoard_Mapping.cpp" />
+    <ClCompile Include="TicTacToe.cpp" />
     <ClCompile Include="zobrish_hashing.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -162,6 +171,7 @@
     <ClInclude Include="Enums.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="King.h" />
+    <ClInclude Include="MCTS.h" />
     <ClInclude Include="MoveGenerator.h" />
     <ClInclude Include="Pawn.h" />
     <ClInclude Include="PieceMagicStorage.h" />
@@ -170,6 +180,7 @@
     <ClInclude Include="Queen.h" />
     <ClInclude Include="Rook.h" />
     <ClInclude Include="Sprite_BitBoard_Mapping.h" />
+    <ClInclude Include="TicTacToe.h" />
     <ClInclude Include="Utility_BB.h" />
     <ClInclude Include="Utility_Class.h" />
     <ClInclude Include="zobrish_hashing.h" />
