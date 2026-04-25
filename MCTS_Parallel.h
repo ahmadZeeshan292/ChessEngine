@@ -4,14 +4,10 @@
 #include <memory>
 #include "IGame.h"
 #include "ResNet_Model.h"
-#include "Node.h"   // evaluate_model_parallel
+#include "Node.h"  
 
 using namespace std;
 
-// ---------------------------------------------------------------------------
-// MemoryEntry — FIX #13: templated on State so it works for any game
-// (was hardcoded to vector<vector<int>>, breaking Connect4 etc.)
-// ---------------------------------------------------------------------------
 template<typename State>
 struct MemoryEntry {
     State          state;
@@ -37,12 +33,6 @@ struct Experience {
     }
 };
 
-// ---------------------------------------------------------------------------
-// SPG  (Self-Play Game container)
-// FIX #7: no raw `new` — root_owner holds the root node via unique_ptr;
-//         `node` is a raw observer pointer (never owning)
-// FIX #12: owns its own `player` so parallel games don't share one variable
-// ---------------------------------------------------------------------------
 template<typename State, typename MoveContainer, typename EncodedState>
 struct SPG {
     State state;
@@ -56,7 +46,6 @@ struct SPG {
     explicit SPG(IGame<State, MoveContainer, EncodedState>& game)
         : state(game.get_initial_state())
     {
-        // FIX #7: initialise via unique_ptr — no bare new / no leak
         root_owner = make_unique<Node<State, MoveContainer, EncodedState>>(game, state);
         root = root_owner.get();
         node = root;
@@ -73,7 +62,6 @@ inline void apply_dirichlet_noise(vector<float>& policy,
         torch::TensorOptions().dtype(torch::kFloat32).device(device));
     torch::Tensor gamma_samples = at::_standard_gamma(concentration);
 
-    // FIX: .cpu().contiguous() before data_ptr — essential when device is CUDA
     torch::Tensor dirichlet = (gamma_samples / gamma_samples.sum())
         .cpu().contiguous();
 
@@ -87,7 +75,7 @@ inline void apply_dirichlet_noise(vector<float>& policy,
 template<typename State, typename MoveContainer, typename EncodedState>
 class MCTSParallel {
     IGame<State, MoveContainer, EncodedState>& game;
-    ResNet& model;   // FIX #8: reference, not value copy
+    ResNet& model;  
 
     void mask_and_normalize(vector<float>& policy, const MoveContainer& valid_moves) {
         float sum = 0.0f;
@@ -102,12 +90,10 @@ class MCTSParallel {
     }
 
 public:
-    // FIX #8: accept by reference
     MCTSParallel(IGame<State, MoveContainer, EncodedState>& game, ResNet& model)
         : game(game), model(model) {
     }
 
-    // FIX #9: states by const ref — search doesn't mutate the input states
     void search(const vector<State>& states,
         vector<SPG<State, MoveContainer, EncodedState>>& spgames);
 };
@@ -136,10 +122,8 @@ void MCTSParallel<State, MoveContainer, EncodedState>::search(
         spgames[i].root->expand(root_policies[i]);
     }
 
-    // --- MCTS simulations ---
-    for (int sim = 0; sim < NUM_SEARCHES; sim++) {  // FIX #10: renamed outer var to 'sim'
-        // Selection phase
-        for (int j = 0; j < (int)spgames.size(); j++) {  // FIX #10: inner loop uses 'j'
+    for (int sim = 0; sim < NUM_SEARCHES; sim++) { 
+        for (int j = 0; j < (int)spgames.size(); j++) {
             spgames[j].node = nullptr;
             Node<State, MoveContainer, EncodedState>* node = spgames[j].root;
 
@@ -156,7 +140,6 @@ void MCTSParallel<State, MoveContainer, EncodedState>::search(
                 spgames[j].node = node;
         }
 
-        // Collect expandable games
         vector<int> expandable_idx;
         expandable_idx.reserve(spgames.size());
         for (int j = 0; j < (int)spgames.size(); j++) {
@@ -166,13 +149,11 @@ void MCTSParallel<State, MoveContainer, EncodedState>::search(
 
         if (expandable_idx.empty()) continue;
 
-        // Batch-encode states of nodes to expand
         vector<State> expand_states;
         expand_states.reserve(expandable_idx.size());
         for (int idx : expandable_idx)
             expand_states.push_back(spgames[idx].node->state);
 
-        // FIX #2: single batched forward pass for all expandable nodes
         auto [eval_values, policies] =
             evaluate_model_parallel(model, game.get_encoded_state_parallel(expand_states));
 
