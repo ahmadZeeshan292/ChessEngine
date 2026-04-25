@@ -51,6 +51,21 @@
     <ClCompile Include="Connect4.cpp">
       <Filter>Implementations</Filter>
     </ClCompile>
+    <ClCompile Include="BB_Magic_Algorithm.cpp">
+      <Filter>Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="BB_MoveGenerator.cpp">
+      <Filter>Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="BitBoard.cpp">
+      <Filter>Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="zobrish_hashing.cpp">
+      <Filter>Implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="Chess.cpp">
+      <Filter>Implementations</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Node.h">
@@ -72,6 +87,39 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Connect4.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="AlphaZeroParallel.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MCTS_Parallel.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Enums.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="BB_MagicAlgorithm.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="PieceMagicStorage.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="BB_MoveGenerator.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="BitBoard.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility_BB.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="zobrish_hashing.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Position.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Chess.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>

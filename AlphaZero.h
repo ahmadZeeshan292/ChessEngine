@@ -3,10 +3,11 @@
 #include "TicTacToe.h"
 #include "ResNet_Model.h"
 #include "MCTS.h"
+#include <random>
 
 #define selfPlay_iterations 500
 #define num_epochs 4
-#define num_iterations 3
+#define num_iterations 8
 #define batch_size 128
 #define temperature 1.25 //  temperature > 1 means more exploration, temperature < 1 means more exploitation
 
@@ -33,29 +34,24 @@ class AlphaZero {
 	torch::optim::Adam optimizer;
 	MCTS<State, MoveContainer, EncodedState> mcts;
 
+	// FIX #7: Static RNG — created once, not per call
+	static mt19937& get_rng() {
+		static mt19937 gen(random_device{}());
+		return gen;
+	}
+
 public:
-	AlphaZero(IGame<State, MoveContainer, EncodedState> &game, ResNet &model);
+	AlphaZero(IGame<State, MoveContainer, EncodedState>& game, ResNet& model);
 
 	vector<Experience> self_play();
-	void train(vector<vector<Experience>>&memory);
+	void train(vector<Experience>& flat_memory); // FIX #2: takes flat memory directly
 	void learn();
 };
 
-#include "AlphaZero.h"
-#include <random>
-
-
-int getRandomAction(int actionSize, vector<float>& action_probs) {
-	random_device rd;
-	mt19937 gen(rd());
+int getRandomAction(int actionSize, vector<float>& action_probs, mt19937& gen) {
+	// FIX #7: accepts gen instead of creating new one each call
 	discrete_distribution<> dist(action_probs.begin(), action_probs.end());
 	return dist(gen);
-}
-
-void shuffle_memory(vector<vector<Experience>>& memory) {
-	random_device rd;
-	mt19937 gen(rd());
-	shuffle(memory.begin(), memory.end(), gen);
 }
 
 template<typename State, typename MoveContainer, typename EncodedState>
@@ -75,36 +71,27 @@ vector<Experience> AlphaZero<State, MoveContainer, EncodedState>::self_play()
 
 		memory.push_back(MemoryEntry(neutral_state, action_probs, player));
 
+		// FIX #6: Combined temperature scaling + normalization in one pass
 		vector<float> temperatured_probs = action_probs;
-
+		float sum = 0.0f;
 		for (auto& prob : temperatured_probs) {
-			prob = pow(prob, 1.0 / temperature);
-		}
-
-		//cout << endl;
-
-		float sum = 0;
-
-		for (auto& prob : temperatured_probs)
+			prob = pow(prob, 1.0f / temperature);
 			sum += prob;
+		}
 		for (auto& prob : temperatured_probs)
 			prob /= sum;
 
-		int action = getRandomAction(game.action_size, temperatured_probs);
+		int action = getRandomAction(game.action_size, temperatured_probs, get_rng());
 
 		state = game.get_next_state(state, action, player);
 
 		auto [value, is_terminal] = game.get_value_and_terminated(state, action);
 
 		if (is_terminal) {
-
-			//cout << "Player " << player << " takes action " << action << " with value " << value << ". Terminal State reached after: " << move_count << endl;
-			vector<vector<int>> final_neutral_state = game.change_perspective(state, player);
-			vector<float> dummy_probs(game.action_size, 1.0 / game.action_size); // Uniform is safer than all zeros
-
-			memory.push_back(MemoryEntry(final_neutral_state, dummy_probs, player));
+			// FIX #1: Removed redundant dummy terminal state push — it was never meaningfully used
 
 			vector<Experience> experience;
+			experience.reserve(memory.size()); // pre-reserve to avoid reallocations
 
 			for (auto& entry : memory) {
 				int outcome = entry.player == player ? value : game.get_opponent_value(value);
@@ -120,62 +107,64 @@ vector<Experience> AlphaZero<State, MoveContainer, EncodedState>::self_play()
 }
 
 template<typename State, typename MoveContainer, typename EncodedState>
-void AlphaZero<State, MoveContainer, EncodedState>::train(vector<vector<Experience>>& memory)
+void AlphaZero<State, MoveContainer, EncodedState>::train(vector<Experience>& flat_memory)
 {
-	shuffle_memory(memory);
+	// FIX #2+#5: flat_memory is already shuffled and flattened — no nested loop needed
+	for (int idx = 0; idx < (int)flat_memory.size(); idx += batch_size) {
+		int end = min((int)flat_memory.size(), idx + batch_size);
+		int current_batch_size = end - idx;
 
-	for (int idx = 0; idx < memory.size(); idx += batch_size) {
-		vector<vector<Experience>> sample(memory.begin() + idx, min(memory.begin() + memory.size(), memory.begin() + idx + batch_size));
-
+		// FIX #3: pre-reserve all vectors upfront
 		vector<vector<vector<vector<float>>>> states;
 		vector<vector<float>> action_probs;
 		vector<float> rewards;
+		states.reserve(current_batch_size);
+		action_probs.reserve(current_batch_size);
+		rewards.reserve(current_batch_size);
 
-		for (auto& experience : sample) {
-			for (auto& entry : experience) {
-				states.push_back(entry.encoded_state);
-				action_probs.push_back(entry.action_probs);
-				rewards.push_back(entry.reward);
-			}
+		for (int i = idx; i < end; i++) {
+			states.push_back(flat_memory[i].encoded_state);
+			action_probs.push_back(flat_memory[i].action_probs);
+			rewards.push_back(flat_memory[i].reward);
 		}
 
+		// FIX #4: Convert tensors and stack — still per-entry but avoids double allocation
 		std::vector<torch::Tensor> tensors;
-		for (int i = 0; i < states.size(); i++) {
+		tensors.reserve(current_batch_size);
+		for (int i = 0; i < (int)states.size(); i++) {
 			tensors.push_back(convert_to_tensor(states[i], model.device).squeeze(0));
 		}
-
 		torch::Tensor state_tensor = torch::stack(tensors).to(torch::kFloat32);
 
-		// Policy targets: [batch, action_size]
+		// FIX #3: pre-reserve flat_action_probs
+		int prob_size = (int)action_probs[0].size();
 		std::vector<float> flat_action_probs;
+		flat_action_probs.reserve((size_t)current_batch_size * prob_size);
 		for (const auto& probs : action_probs) {
 			flat_action_probs.insert(flat_action_probs.end(), probs.begin(), probs.end());
 		}
 
 		torch::Tensor policy_targets = torch::from_blob(
-			flat_action_probs.data(), { (int)action_probs.size(), (int)action_probs[0].size() }, torch::kFloat32).
-			clone().to(model.device);
+			flat_action_probs.data(), { current_batch_size, prob_size }, torch::kFloat32)
+			.clone().to(model.device);
 
-		// Value targets: [batch, 1]
-		torch::Tensor value_target = torch::from_blob(rewards.data(), { (int)rewards.size(), 1 }, torch::kFloat32)
-			.clone()
-			.to(model.device);
+		torch::Tensor value_target = torch::from_blob(
+			rewards.data(), { current_batch_size, 1 }, torch::kFloat32)
+			.clone().to(model.device);
 
 		auto [out_policy, out_value] = model.forward(state_tensor);
 
-		// Ensure out_value is [batch, 1]
 		if (out_value.sizes().size() == 1) {
 			out_value = out_value.unsqueeze(1);
 		}
 
-		// Policy loss: negative log likelihood with log_softmax
+		// FIX #8: NoGradGuard not needed in train, but ensure model is in train mode (done in learn())
 		torch::Tensor policy_loss = torch::nn::functional::kl_div(
 			torch::log_softmax(out_policy, 1),
 			policy_targets,
 			torch::nn::functional::KLDivFuncOptions().reduction(torch::kBatchMean)
 		);
 
-		// Value loss: MSE
 		torch::Tensor value_loss = torch::nn::functional::mse_loss(out_value, value_target);
 
 		torch::Tensor loss = policy_loss + value_loss;
@@ -183,7 +172,6 @@ void AlphaZero<State, MoveContainer, EncodedState>::train(vector<vector<Experien
 		std::cout << "policy_loss: " << policy_loss.item<float>()
 			<< " value_loss: " << value_loss.item<float>()
 			<< " total_loss: " << loss.item<float>() << std::endl;
-
 
 		optimizer.zero_grad();
 		loss.backward();
@@ -194,21 +182,34 @@ void AlphaZero<State, MoveContainer, EncodedState>::train(vector<vector<Experien
 template<typename State, typename MoveContainer, typename EncodedState>
 void AlphaZero<State, MoveContainer, EncodedState>::learn()
 {
-	for (int i = 0; i < num_iterations; i++) {
+	mt19937& gen = get_rng();
 
-		vector<vector<Experience>> memory; // training data from self play
+	for (int i = 0; i < num_iterations; i++) {
 		cout << "\nIteration " << i + 1 << "/" << num_iterations << endl;
 
+		// FIX #2+#5: collect all experiences into one flat vector
+		vector<Experience> flat_memory;
+
 		model.eval();
-		for (int j = 0; j < selfPlay_iterations; j++) {
-			cout << "Self-play game " << j + 1 << "/" << selfPlay_iterations << endl;
-			memory.push_back(self_play());
+		{
+			// FIX #8: disable gradient computation during self-play inference
+			torch::NoGradGuard no_grad;
+			for (int j = 0; j < selfPlay_iterations; j++) {
+				cout << "Self-play game " << j + 1 << "/" << selfPlay_iterations << endl;
+				vector<Experience> game_exp = self_play();
+				flat_memory.insert(flat_memory.end(),
+					make_move_iterator(game_exp.begin()),
+					make_move_iterator(game_exp.end())); // move instead of copy
+			}
 		}
+
+		// FIX #5: shuffle flat experiences so batches have diverse, uncorrelated samples
+		shuffle(flat_memory.begin(), flat_memory.end(), gen);
 
 		for (int j = 0; j < num_epochs; j++) {
 			cout << "Training epoch " << j + 1 << "/" << num_epochs << endl;
 			model.train();
-			train(memory);
+			train(flat_memory);
 		}
 
 		cout << "Saving Model" << endl;
@@ -221,5 +222,3 @@ void AlphaZero<State, MoveContainer, EncodedState>::learn()
 		opt_archive.save_to("optimizer_" + to_string(i) + game.get_name() + ".pt");
 	}
 }
-
-

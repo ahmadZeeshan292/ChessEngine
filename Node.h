@@ -5,7 +5,7 @@
 #include <random>
 using namespace std;
 
-#define NUM_SEARCHES 400
+#define NUM_SEARCHES 800
 #define C 2
 #define DIRICHLET_EPSILON 0.25
 #define DIRICHLET_ALPHA 0.3
@@ -26,9 +26,14 @@ inline float fast_sqrt(int n)
 
 template<typename State, typename MoveContainer, typename EncodedState>
 class Node {
+private:
+	static mt19937& rng() {
+		thread_local static mt19937 gen{ random_device{}() };
+		return gen;
+	}
 public:
 	IGame<State, MoveContainer, EncodedState>& game;
-	vector<vector<int>> state;
+	State state;
 
 	Node* parent;
 	int action;

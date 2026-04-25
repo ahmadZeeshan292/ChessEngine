@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef ResNetModel
+#define ResNetModel
+
 #include "torch/torch.h"
 #include "TicTacToe.h"
 
@@ -13,9 +16,9 @@ public:
 	torch::Device device;
 
 	template<typename State, typename MoveContainer, typename EncodedState>
-	ResNet(IGame<State, MoveContainer, EncodedState> &game, int num_resBlocks, int num_hidden, torch::Device device);
+	ResNet(IGame<State, MoveContainer, EncodedState> &game, int num_resBlocks, int num_hidden, torch::Device& device);
 
-	pair<torch::Tensor, torch::Tensor> forward(torch::Tensor x);
+	pair<torch::Tensor, torch::Tensor> forward(torch::Tensor &x);
 
 };
 
@@ -76,10 +79,48 @@ inline pair<float, vector<float>> evaluate_model(ResNet& model, vector<vector<ve
 	return { value, policy };
 }
 
+inline std::pair<std::vector<float>, std::vector<std::vector<float>>>evaluate_model_parallel(ResNet& model,const vector<vector<vector<vector<float>>>>& encoded_states)
+{
+	// encoded_states layout: [batch, channels, rows, cols]
+	int batch = (int)encoded_states.size();
+	if (batch == 0) return { {}, {} };
+
+	std::vector<torch::Tensor> tensors;
+	tensors.reserve(batch);
+	for (const auto& state : encoded_states) {
+		tensors.push_back(convert_to_tensor(state, model.device).squeeze(0));
+	}
+
+	torch::Tensor state_tensor = torch::stack(tensors, 0).to(torch::kFloat32);
+	auto [policy_tensor_raw, value_tensor_raw] = model.forward(state_tensor);
+
+	torch::Tensor policy_tensor = torch::softmax(policy_tensor_raw, 1)
+		.detach().cpu().to(torch::kFloat32);
+
+	policy_tensor = policy_tensor.contiguous();
+
+	torch::Tensor value_tensor = value_tensor_raw.squeeze(-1)  // -> [batch]
+		.detach().cpu().to(torch::kFloat32).contiguous();
+
+	int action_size = (int)policy_tensor.size(1);
+	const float* policy_ptr = policy_tensor.data_ptr<float>();
+	const float* value_ptr = value_tensor.data_ptr<float>();
+
+	std::vector<float> values(value_ptr, value_ptr + batch);
+
+	std::vector<std::vector<float>> policies(batch);
+	for (int i = 0; i < batch; i++) {
+		policies[i].assign(policy_ptr + i * action_size,
+			policy_ptr + i * action_size + action_size);
+	}
+
+	return { values, policies };
+}
+
 
 
 template<typename State, typename MoveContainer, typename EncodedState>
-ResNet::ResNet(IGame<State, MoveContainer, EncodedState>& game, int num_resBlocks, int num_hidden, torch::Device device) : device(device) {
+ResNet::ResNet(IGame<State, MoveContainer, EncodedState>& game, int num_resBlocks, int num_hidden, torch::Device &device) : device(device) {
 
 	backBone = register_module("backBone", torch::nn::ModuleList());
 
@@ -111,4 +152,6 @@ ResNet::ResNet(IGame<State, MoveContainer, EncodedState>& game, int num_resBlock
 	));
 
 	this->to(device);
-}
+};
+
+#endif

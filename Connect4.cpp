@@ -76,19 +76,19 @@ bool Connect4::check_win(vector<vector<int>> state, int action)
 	return false;
 }
 
-pair<int, bool> Connect4::get_value_and_terminated(vector<vector<int>>& state, int& action)
+pair<float, bool> Connect4::get_value_and_terminated(vector<vector<int>>& state, int& action)
 {
 	if (check_win(state, action)) {
-		return { 1, true }; // Current player wins
+		return { 1.0, true }; // Current player wins
 	}
 
 	vector<int> moves = get_valid_moves(state);
 
 	if (accumulate(moves.begin(), moves.end(), 0) == 0) {
-		return { 0, true }; // Draw
+		return { 0.0, true }; // Draw
 	}
 
-	return { 0, false }; // Game continues
+	return { 0.0, false }; // Game continues
 }
 
 int Connect4::get_opponent(int player)
@@ -135,4 +135,28 @@ vector<vector<vector<float>>> Connect4::get_encoded_state(vector<vector<int>> st
 	}
 
 	return { player0_state, avaliable_move_state, player1_state };
+}
+
+vector<vector<vector<vector<float>>>> Connect4::get_encoded_state_parallel(const vector<vector<vector<int>>>& states)
+{
+	int batch = states.size();
+	vector<vector<vector<vector<float>>>> batch_encoded(batch);
+
+	for (int b = 0; b < batch; b++) {
+		const auto& state = states[b];
+
+		vector<vector<vector<float>>> encoded_state(3, vector<vector<float>>(row_count, vector<float>(col_count, 0.0f)));
+
+		for (int i = 0; i < row_count; i++) {
+			for (int j = 0; j < col_count; j++) {
+				int val = state[i][j];
+				encoded_state[0][i][j] = (val == 1) ? 1.0f : 0.0f;
+				encoded_state[1][i][j] = (val == -1) ? 1.0f : 0.0f;
+				encoded_state[2][i][j] = (val == 0) ? 1.0f : 0.0f;
+			}
+		}
+		batch_encoded[b] = std::move(encoded_state);
+	}
+
+	return batch_encoded;
 }

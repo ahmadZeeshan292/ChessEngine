@@ -148,6 +148,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AlphaZero.cpp" />
+    <ClCompile Include="BB_Magic_Algorithm.cpp" />
+    <ClCompile Include="BB_MoveGenerator.cpp" />
+    <ClCompile Include="BitBoard.cpp" />
+    <ClCompile Include="Chess.cpp" />
     <ClCompile Include="Connect4.cpp" />
     <ClCompile Include="MCTS.cpp" />
     <ClCompile Include="Node.cpp" />
@@ -156,15 +160,27 @@
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="TicTacToe.cpp" />
     <ClCompile Include="torch_Utility.h" />
+    <ClCompile Include="zobrish_hashing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlphaZero.h" />
+    <ClInclude Include="AlphaZeroParallel.h" />
+    <ClInclude Include="BB_MagicAlgorithm.h" />
+    <ClInclude Include="BitBoard.h" />
+    <ClInclude Include="Chess.h" />
     <ClInclude Include="Connect4.h" />
+    <ClInclude Include="Enums.h" />
     <ClInclude Include="IGame.h" />
     <ClInclude Include="MCTS.h" />
+    <ClInclude Include="MCTS_Parallel.h" />
+    <ClInclude Include="BB_MoveGenerator.h" />
     <ClInclude Include="Node.h" />
+    <ClInclude Include="PieceMagicStorage.h" />
+    <ClInclude Include="Position.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="TicTacToe.h" />
+    <ClInclude Include="Utility_BB.h" />
+    <ClInclude Include="zobrish_hashing.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BB_ChessEngine.rc" />
