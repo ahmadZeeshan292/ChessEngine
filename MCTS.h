@@ -49,21 +49,15 @@ vector<float> MCTS<State, MoveContainer, EncodedState>::search(vector<vector<int
 {
 	torch::NoGradGuard no_grad;
 
-	// FIX #1: unique_ptr owns the tree — automatically freed when search() returns, no leak
 	auto root_owner = make_unique<Node<State, MoveContainer, EncodedState>>(game, state);
 	Node<State, MoveContainer, EncodedState>* root = root_owner.get();
 	root->visit_count = 1;
 
-	// Evaluate root node once
 	auto [root_value, root_policy] = evaluate_model(model, game.get_encoded_state(root->state));
 
-	// FIX #7: apply Dirichlet directly on vector — eliminates from_blob + clone tensor roundtrip
 	apply_dirichlet_noise(root_policy, DIRICHLET_ALPHA, DIRICHLET_EPSILON, model.device);
-
-	// FIX #4: get_valid_moves called once for root, reused in expansion below
 	vector<int> valid_moves = game.get_valid_moves(root->state);
 
-	// FIX #3: mask + normalize via shared helper — no duplicated block
 	mask_and_normalize(root_policy, valid_moves);
 
 	root->expand(root_policy);
@@ -71,7 +65,6 @@ vector<float> MCTS<State, MoveContainer, EncodedState>::search(vector<vector<int
 	for (int i = 0; i < NUM_SEARCHES; i++) {
 		Node<State, MoveContainer, EncodedState>* node = root;
 
-		// Selection Phase — walk down until a non-fully-expanded node
 		while (node->is_fully_expanded()) {
 			node = node->select();
 		}
@@ -81,25 +74,19 @@ vector<float> MCTS<State, MoveContainer, EncodedState>::search(vector<vector<int
 
 		// Expansion Phase
 		if (!is_terminal) {
-			// FIX #2: evaluate_model only called once per search iteration (not redundantly at root)
-			// FIX #6: structured binding avoids extra vector copy
+
 			auto [eval_value, policy] = evaluate_model(model, game.get_encoded_state(node->state));
 			value = eval_value;
 
-			// FIX #4: valid_moves fetched only for this specific node state
 			valid_moves = game.get_valid_moves(node->state);
-
-			// FIX #3: same helper reused — no copy-pasted masking/normalization block
 			mask_and_normalize(policy, valid_moves);
 
 			node->expand(policy);
 		}
 
-		// Backpropagation Phase
 		node->backpropagate(value);
 	}
 
-	// FIX #5: single pass — collect visit counts and accumulate sum simultaneously
 	vector<float> action_probabilities(game.action_size, 0.0f);
 	float sum = 0.0f;
 	for (auto& child : root->children) {
@@ -113,6 +100,5 @@ vector<float> MCTS<State, MoveContainer, EncodedState>::search(vector<vector<int
 			action_probabilities[child->action] *= inv_sum;
 	}
 
-	// root_owner destructor fires here — FIX #1: entire tree freed with no manual delete
 	return action_probabilities;
 }
